@@ -44,6 +44,19 @@ export function AdminLayout() {
             </Button>
           </div>
         </div>
+        <nav className="flex gap-1 overflow-x-auto border-t border-slate-100 px-4 py-2 sm:hidden">
+          <MobileNavLink to="/" current={location.pathname} exact>
+            Início
+          </MobileNavLink>
+          <MobileNavLink to="/imoveis" current={location.pathname}>
+            {isAdmin ? 'Imóveis' : 'Meus anúncios'}
+          </MobileNavLink>
+          {isAdmin && (
+            <MobileNavLink to="/corretores" current={location.pathname}>
+              Corretores
+            </MobileNavLink>
+          )}
+        </nav>
       </header>
       <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6">
         <Outlet />
@@ -69,6 +82,33 @@ function NavLink({
     <Link
       to={to}
       className={`rounded-lg px-3 py-2 text-sm font-medium transition ${
+        isActive
+          ? 'bg-blue-50 text-blue-700'
+          : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+      }`}
+    >
+      {children}
+    </Link>
+  )
+}
+
+function MobileNavLink({
+  to,
+  children,
+  current,
+  exact,
+}: {
+  to: string
+  children: React.ReactNode
+  current: string
+  exact?: boolean
+}) {
+  const isActive = exact ? current === to : to === '/' ? current === '/' : current.startsWith(to)
+
+  return (
+    <Link
+      to={to}
+      className={`shrink-0 rounded-lg px-3 py-2 text-sm font-medium transition ${
         isActive
           ? 'bg-blue-50 text-blue-700'
           : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'

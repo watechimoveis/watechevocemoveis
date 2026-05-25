@@ -1,7 +1,7 @@
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { clearAuth, getAccessToken, getStoredUser } from '../services/api'
-import { login as loginRequest } from '../services/authService'
+import { clearAuth, getAccessToken, getStoredUser, setAuth } from '../services/api'
+import { fetchMe, login as loginRequest } from '../services/authService'
 import type { User } from '../types/user'
 
 interface AuthContextValue {
@@ -10,6 +10,7 @@ interface AuthContextValue {
   isAdmin: boolean
   isAgent: boolean
   login: (email: string, password: string) => Promise<void>
+  establishSession: (token: string, sessionUser: User) => void
   logout: () => void
 }
 
@@ -20,11 +21,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(() => getStoredUser())
   const isAuthenticated = Boolean(getAccessToken())
 
+  const establishSession = useCallback((token: string, sessionUser: User) => {
+    setAuth(token, sessionUser)
+    setUser(sessionUser)
+  }, [])
+
+  useEffect(() => {
+    const token = getAccessToken()
+    if (!token) return
+
+    fetchMe()
+      .then((freshUser) => {
+        setAuth(token, freshUser)
+        setUser(freshUser)
+      })
+      .catch(() => {
+        clearAuth()
+        setUser(null)
+      })
+  }, [])
+
   const login = useCallback(async (loginEmail: string, password: string) => {
     const data = await loginRequest(loginEmail, password)
-    setUser(data.user)
+    establishSession(data.access_token, data.user)
     navigate('/', { replace: true })
-  }, [navigate])
+  }, [navigate, establishSession])
 
   const logout = useCallback(() => {
     clearAuth()
@@ -39,9 +60,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isAdmin: user?.role === 'admin',
       isAgent: user?.role === 'agent',
       login,
+      establishSession,
       logout,
     }),
-    [user, isAuthenticated, login, logout],
+    [user, isAuthenticated, login, establishSession, logout],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

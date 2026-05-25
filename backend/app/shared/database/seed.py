@@ -8,13 +8,17 @@ from app.shared.auth.security import hash_password
 
 def seed_admin_user(db: Session) -> None:
     repository = UserRepository(db)
-    existing = repository.get_by_email(settings.admin_email)
+    email = settings.admin_email.lower()
+    existing = repository.get_by_email(email)
+
     if existing:
+        if existing.role != UserRole.ADMIN.value:
+            repository.update(existing, {"role": UserRole.ADMIN.value, "name": "Administrador"})
         return
 
     repository.create(
         {
-            "email": settings.admin_email.lower(),
+            "email": email,
             "password_hash": hash_password(settings.admin_password),
             "name": "Administrador",
             "creci": None,

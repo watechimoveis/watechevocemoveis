@@ -2,13 +2,12 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
-import { setAuth } from '../services/api'
 import { useAuth } from '../hooks/useAuth'
 import { HttpError } from '../services/api'
 import type { User } from '../types/user'
 
 export function LoginPage() {
-  const { login } = useAuth()
+  const { login, establishSession } = useAuth()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const [email, setEmail] = useState('teste@watechimoveis.com')
@@ -22,13 +21,13 @@ export function LoginPage() {
     if (token && userRaw) {
       try {
         const user = JSON.parse(userRaw) as User
-        setAuth(token, user)
+        establishSession(token, user)
         navigate('/', { replace: true })
       } catch {
         /* ignore malformed handoff */
       }
     }
-  }, [searchParams, navigate])
+  }, [searchParams, navigate, establishSession])
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
