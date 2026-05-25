@@ -24,7 +24,7 @@ services:
       - key: JWT_EXPIRE_MINUTES
         value: "480"
       - key: ADMIN_EMAIL
-        value: admin@watech.com
+        value: teste@watechimoveis.com
       - key: ADMIN_PASSWORD
         sync: false
       - key: UPLOAD_DIR
