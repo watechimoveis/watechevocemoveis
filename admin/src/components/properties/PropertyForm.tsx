@@ -49,6 +49,15 @@ export function PropertyForm({ property, onSubmit, onCancel, onPropertyChange, l
   const [listingType, setListingType] = useState<'sale' | 'rent'>('sale')
   const [agentUserId, setAgentUserId] = useState('')
 
+  const selectedAgent = agents.find((a) => a.id === agentUserId)
+  const canSubmitAsAdmin =
+    !isAdmin ||
+    Boolean(
+      property?.id ||
+        (agentUserId && selectedAgent?.whatsapp),
+    )
+  const canSubmitAsAgent = !isAgent || Boolean(user?.whatsapp)
+
   useEffect(() => {
     if (isAdmin) {
       listAgents().then(setAgents).catch(() => setAgents([]))
@@ -130,6 +139,11 @@ export function PropertyForm({ property, onSubmit, onCancel, onPropertyChange, l
                   WhatsApp não cadastrado. Peça ao administrador para atualizar seu perfil.
                 </p>
               )}
+              {user.whatsapp && !user.creci && (
+                <p className="mt-2 text-xs text-amber-700">
+                  CRECI não informado — peça ao admin para completar seu cadastro.
+                </p>
+              )}
             </div>
           </div>
         </section>
@@ -144,15 +158,33 @@ export function PropertyForm({ property, onSubmit, onCancel, onPropertyChange, l
           <select
             value={agentUserId}
             onChange={(e) => setAgentUserId(e.target.value)}
+            required={!property?.id}
             className="mt-3 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
           >
-            <option value="">Sem corretor vinculado</option>
+            <option value="">Selecione um corretor</option>
             {agents.filter((a) => a.is_active).map((agent) => (
-              <option key={agent.id} value={agent.id}>
-                {agent.name}{agent.creci ? ` — CRECI ${agent.creci}` : ''}
+              <option key={agent.id} value={agent.id} disabled={!agent.whatsapp}>
+                {agent.name}
+                {agent.creci ? ` — CRECI ${agent.creci}` : ''}
+                {!agent.whatsapp ? ' (sem WhatsApp)' : ''}
               </option>
             ))}
           </select>
+          {!property?.id && !agentUserId && (
+            <p className="mt-2 text-xs font-medium text-amber-700">
+              O imóvel só aparece no site quando vinculado a um corretor com WhatsApp.
+            </p>
+          )}
+          {selectedAgent && !selectedAgent.whatsapp && (
+            <p className="mt-2 text-xs font-medium text-red-600">
+              Este corretor não tem WhatsApp. Atualize o cadastro em Corretores antes de publicar.
+            </p>
+          )}
+          {selectedAgent && !selectedAgent.creci && (
+            <p className="mt-2 text-xs text-amber-700">
+              CRECI não informado — recomendado para transmitir confiança no site.
+            </p>
+          )}
         </section>
       )}
 
@@ -193,25 +225,31 @@ export function PropertyForm({ property, onSubmit, onCancel, onPropertyChange, l
         <Textarea label="Descrição" name="description" placeholder="Detalhes do imóvel…" value={description} onChange={(e) => setDescription(e.target.value)} />
       </section>
 
-      {property?.id && property.stats && (property.stats.views_7d > 0 || property.stats.whatsapp_clicks_7d > 0) && (
+      {property?.id && (
         <section className="rounded-xl border border-blue-200 bg-blue-50/60 p-4">
           <h3 className="text-sm font-semibold text-blue-900">Performance nos últimos 7 dias</h3>
-          <dl className="mt-2 grid gap-2 text-sm sm:grid-cols-3">
-            <div>
-              <dt className="text-blue-700/80">Visualizações</dt>
-              <dd className="font-semibold text-blue-950">{property.stats.views_7d}</dd>
-            </div>
-            <div>
-              <dt className="text-blue-700/80">Cliques WhatsApp</dt>
-              <dd className="font-semibold text-blue-950">{property.stats.whatsapp_clicks_7d}</dd>
-            </div>
-            <div>
-              <dt className="text-blue-700/80">Taxa de conversão</dt>
-              <dd className="font-semibold text-blue-950">
-                {whatsappConversionRate(property.stats) ?? '—'}
-              </dd>
-            </div>
-          </dl>
+          {property.stats && (property.stats.views_7d > 0 || property.stats.whatsapp_clicks_7d > 0) ? (
+            <dl className="mt-2 grid gap-2 text-sm sm:grid-cols-3">
+              <div>
+                <dt className="text-blue-700/80">Visualizações</dt>
+                <dd className="font-semibold text-blue-950">{property.stats.views_7d}</dd>
+              </div>
+              <div>
+                <dt className="text-blue-700/80">Cliques WhatsApp</dt>
+                <dd className="font-semibold text-blue-950">{property.stats.whatsapp_clicks_7d}</dd>
+              </div>
+              <div>
+                <dt className="text-blue-700/80">Taxa de conversão</dt>
+                <dd className="font-semibold text-blue-950">
+                  {whatsappConversionRate(property.stats) ?? '—'}
+                </dd>
+              </div>
+            </dl>
+          ) : (
+            <p className="mt-2 text-sm text-blue-800/80">
+              Ainda sem visitas ou cliques no WhatsApp. Compartilhe o link do imóvel para atrair interessados.
+            </p>
+          )}
         </section>
       )}
 
@@ -229,7 +267,11 @@ export function PropertyForm({ property, onSubmit, onCancel, onPropertyChange, l
         <button type="button" onClick={onCancel} disabled={loading} className="rounded-lg px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100">
           Cancelar
         </button>
-        <button type="submit" disabled={loading || (isAgent && !user?.whatsapp)} className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50">
+        <button
+          type="submit"
+          disabled={loading || !canSubmitAsAdmin || !canSubmitAsAgent}
+          className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+        >
           {loading ? 'Salvando…' : property ? 'Salvar alterações' : 'Criar imóvel'}
         </button>
       </div>

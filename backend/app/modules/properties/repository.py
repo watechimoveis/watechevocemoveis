@@ -15,13 +15,22 @@ class PropertyRepository:
     def _base_query(self):
         return select(Property).options(selectinload(Property.images))
 
-    def _apply_filters(self, stmt, filters: PropertySearchFilters):
+    def _apply_filters(self, stmt, filters: PropertySearchFilters, *, public_only: bool = False):
+        if public_only:
+            stmt = stmt.where(Property.agent_whatsapp.isnot(None), Property.agent_whatsapp != "")
         if filters.listing_type:
             stmt = stmt.where(Property.listing_type == filters.listing_type)
         if filters.min_price is not None:
             stmt = stmt.where(Property.price >= filters.min_price)
         if filters.max_price is not None:
             stmt = stmt.where(Property.price <= filters.max_price)
+        if filters.location:
+            term = f"%{filters.location.strip()}%"
+            stmt = stmt.where(Property.location.ilike(term))
+        if filters.min_rooms is not None:
+            stmt = stmt.where(Property.rooms >= filters.min_rooms)
+        if filters.min_size is not None:
+            stmt = stmt.where(Property.size >= filters.min_size)
         return stmt
 
     def _apply_sort(self, stmt, sort: str):
@@ -51,11 +60,12 @@ class PropertyRepository:
     ) -> tuple[list[Property], int]:
         offset = (page - 1) * limit
         search = filters or PropertySearchFilters()
+        public_only = agent_user_id is None
 
         count_stmt = select(func.count()).select_from(Property)
         stmt = self._base_query()
-        stmt = self._apply_filters(stmt, search)
-        count_stmt = self._apply_filters(count_stmt, search)
+        stmt = self._apply_filters(stmt, search, public_only=public_only)
+        count_stmt = self._apply_filters(count_stmt, search, public_only=public_only)
 
         if agent_user_id:
             count_stmt = count_stmt.where(Property.agent_user_id == agent_user_id)
@@ -100,3 +110,37 @@ class PropertyRepository:
             select(func.max(PropertyImage.sort_order)).where(PropertyImage.property_id == property_id)
         )
         return (max_order or -1) + 1
+
+    def list_similar(self, property_id: UUID, limit: int = 3) -> list[Property]:
+        base = self.get_by_id(property_id)
+        if not base:
+            return []
+
+        def _query(*extra_filters) -> list[Property]:
+            stmt = self._base_query().where(
+                Property.id != property_id,
+                Property.agent_whatsapp.isnot(None),
+                Property.agent_whatsapp != "",
+                Property.listing_type == base.listing_type,
+                *extra_filters,
+            )
+            stmt = stmt.order_by(Property.created_at.desc()).limit(limit)
+            return list(self.db.scalars(stmt).all())
+
+        location_hint = (base.location or "").split(",")[0].strip()
+        filters = []
+        if location_hint:
+            filters.append(Property.location.ilike(f"%{location_hint}%"))
+        if base.price is not None:
+            low = base.price * Decimal("0.7")
+            high = base.price * Decimal("1.3")
+            filters.append(Property.price >= low)
+            filters.append(Property.price <= high)
+        if base.rooms is not None:
+            filters.append(Property.rooms >= base.rooms)
+
+        items = _query(*filters) if filters else _query()
+        if items:
+            return items[:limit]
+
+        return _query()[:limit]

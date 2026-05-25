@@ -1,9 +1,8 @@
 import { PropertyCard } from '../components/properties/PropertyCard'
 import { PropertyFilters } from '../components/search/PropertyFilters'
+import type { SearchState } from '../hooks/usePropertySearch'
 import { usePageTitle } from '../hooks/usePageTitle'
 import { usePropertySearch } from '../hooks/usePropertySearch'
-
-const ADMIN_URL = import.meta.env.VITE_ADMIN_URL || 'http://localhost:5173'
 
 export function HomePage() {
   usePageTitle(null)
@@ -11,7 +10,10 @@ export function HomePage() {
   const {
     draft,
     setDraft,
+    applied,
     applySearch,
+    clearFilters,
+    removeFilter,
     properties,
     total,
     pages,
@@ -28,8 +30,11 @@ export function HomePage() {
     <>
       <PropertyFilters
         draft={draft}
+        applied={applied}
         onChange={setDraft}
         onSearch={applySearch}
+        onClear={clearFilters}
+        onRemoveFilter={removeFilter}
         loading={loading}
         total={loading || error ? undefined : total}
       />
@@ -59,16 +64,21 @@ export function HomePage() {
           </div>
         ) : showEmpty ? (
           <div className="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-16 text-center">
-            <p className="text-lg font-medium text-slate-800">Nenhum imóvel disponível no momento</p>
+            <p className="text-lg font-medium text-slate-800">Nenhum imóvel encontrado</p>
             <p className="mt-2 text-sm text-slate-500">
-              Novos anúncios aparecem aqui assim que forem publicados no painel.
+              {hasActiveSearch(applied)
+                ? 'Tente ampliar a busca ou remover alguns filtros.'
+                : 'Em breve novos anúncios com contato direto ao corretor responsável.'}
             </p>
-            <a
-              href={ADMIN_URL}
-              className="mt-6 inline-flex rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
-            >
-              Acessar painel do corretor
-            </a>
+            {hasActiveSearch(applied) && (
+              <button
+                type="button"
+                onClick={clearFilters}
+                className="mt-6 inline-flex rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+              >
+                Limpar filtros
+              </button>
+            )}
           </div>
         ) : !error ? (
           <>
@@ -105,5 +115,17 @@ export function HomePage() {
         ) : null}
       </main>
     </>
+  )
+}
+
+function hasActiveSearch(applied: SearchState) {
+  return Boolean(
+    applied.location.trim() ||
+      applied.minPrice ||
+      applied.maxPrice ||
+      applied.minRooms ||
+      applied.minSize ||
+      applied.sort !== 'recent' ||
+      applied.listingType !== 'sale',
   )
 }

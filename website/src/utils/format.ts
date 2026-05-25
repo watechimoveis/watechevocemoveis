@@ -21,14 +21,29 @@ export function buildWhatsAppUrl(phone: string | null | undefined, message: stri
 }
 
 export function propertyWhatsAppMessage(property: {
+  id?: string
   title?: string | null
   location?: string | null
+  price?: number | null
+  listing_type?: ListingType
   agent_name?: string | null
 }): string {
   const title = property.title || 'imóvel'
   const location = property.location ? ` em ${property.location}` : ''
+  const price =
+    property.price != null && property.listing_type
+      ? formatPrice(property.price, property.listing_type)
+      : null
   const greeting = property.agent_name?.trim()
     ? `Olá, ${property.agent_name.trim()}!`
     : 'Olá!'
-  return `${greeting} Tenho interesse no imóvel "${title}"${location}. Poderia me passar mais informações?`
+
+  const lines = [
+    `${greeting} Tenho interesse no imóvel "${title}"${location}.`,
+    price ? `Valor: ${price}.` : null,
+    property.id ? `Link: ${window.location.origin}/imovel/${property.id}` : null,
+    'Poderia me passar mais informações ou agendar uma visita?',
+  ]
+
+  return lines.filter(Boolean).join('\n')
 }

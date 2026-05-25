@@ -7,4 +7,7 @@ class PropertySearchFilters:
     listing_type: str | None = None
     min_price: Decimal | None = None
     max_price: Decimal | None = None
+    location: str | None = None
+    min_rooms: int | None = None
+    min_size: int | None = None
     sort: str = "recent"

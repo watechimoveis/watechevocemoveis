@@ -2,11 +2,15 @@ import { useCallback, useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import type { ListingType, Property, SortOption } from '../types/property'
 import { searchProperties } from '../services/propertiesService'
+import { defaultSearchState } from '../utils/searchLabels'
 
 export interface SearchState {
   listingType: ListingType
+  location: string
   minPrice: string
   maxPrice: string
+  minRooms: string
+  minSize: string
   sort: SortOption
 }
 
@@ -30,8 +34,11 @@ export function usePropertySearch() {
       const data = await searchProperties({
         page: currentPage,
         listing_type: parsed.listingType,
+        location: parsed.location.trim() || undefined,
         min_price: parsed.minPrice ? Number(parsed.minPrice) : undefined,
         max_price: parsed.maxPrice ? Number(parsed.maxPrice) : undefined,
+        min_rooms: parsed.minRooms ? Number(parsed.minRooms) : undefined,
+        min_size: parsed.minSize ? Number(parsed.minSize) : undefined,
         sort: parsed.sort,
       })
       setProperties(data.items)
@@ -60,15 +67,39 @@ export function usePropertySearch() {
     load(searchParams, Number(searchParams.get('page') || 1))
   }, [searchParams, load])
 
-  function applySearch() {
-    const next = new URLSearchParams()
-    next.set('tipo', draft.listingType)
-    if (draft.minPrice) next.set('min', draft.minPrice)
-    if (draft.maxPrice) next.set('max', draft.maxPrice)
-    next.set('ordem', draft.sort)
-    next.set('page', '1')
-    setSearchParams(next)
-  }
+  useEffect(() => {
+    setDraft(parseParams(searchParams))
+  }, [searchParams])
+
+  const applySearch = useCallback(
+    (nextDraft?: SearchState) => {
+      const state = nextDraft ?? draft
+      setSearchParams(buildParams(state))
+    },
+    [draft, setSearchParams],
+  )
+
+  const clearFilters = useCallback(() => {
+    const reset = defaultSearchState()
+    setDraft(reset)
+    setSearchParams(buildParams(reset))
+  }, [setSearchParams])
+
+  const removeFilter = useCallback(
+    (key: string) => {
+      const next = { ...applied }
+      if (key === 'tipo') next.listingType = 'sale'
+      if (key === 'local') next.location = ''
+      if (key === 'min') next.minPrice = ''
+      if (key === 'max') next.maxPrice = ''
+      if (key === 'quartos') next.minRooms = ''
+      if (key === 'area') next.minSize = ''
+      if (key === 'ordem') next.sort = 'recent'
+      setDraft(next)
+      setSearchParams(buildParams(next))
+    },
+    [applied, setSearchParams],
+  )
 
   function goToPage(nextPage: number) {
     const next = new URLSearchParams(searchParams)
@@ -81,6 +112,8 @@ export function usePropertySearch() {
     setDraft,
     applied,
     applySearch,
+    clearFilters,
+    removeFilter,
     properties,
     total,
     pages,
@@ -92,13 +125,29 @@ export function usePropertySearch() {
   }
 }
 
+function buildParams(state: SearchState): URLSearchParams {
+  const next = new URLSearchParams()
+  next.set('tipo', state.listingType)
+  if (state.location.trim()) next.set('local', state.location.trim())
+  if (state.minPrice) next.set('min', state.minPrice)
+  if (state.maxPrice) next.set('max', state.maxPrice)
+  if (state.minRooms) next.set('quartos', state.minRooms)
+  if (state.minSize) next.set('area', state.minSize)
+  next.set('ordem', state.sort)
+  next.set('page', '1')
+  return next
+}
+
 function parseParams(params: URLSearchParams): SearchState {
   const tipo = params.get('tipo')
   const ordem = params.get('ordem')
   return {
     listingType: tipo === 'rent' ? 'rent' : 'sale',
+    location: params.get('local') || '',
     minPrice: params.get('min') || '',
     maxPrice: params.get('max') || '',
+    minRooms: params.get('quartos') || '',
+    minSize: params.get('area') || '',
     sort: ordem === 'price_asc' || ordem === 'price_desc' ? ordem : 'recent',
   }
 }

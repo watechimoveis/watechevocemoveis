@@ -46,8 +46,11 @@ export interface PropertySearchParams {
   page?: number
   limit?: number
   listing_type?: ListingType
+  location?: string
   min_price?: number
   max_price?: number
+  min_rooms?: number
+  min_size?: number
   sort?: SortOption
 }
 

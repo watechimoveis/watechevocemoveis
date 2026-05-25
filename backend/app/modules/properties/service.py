@@ -95,10 +95,23 @@ class PropertyService:
                 )
             return agent
 
+        if not payload.agent_user_id:
+            raise AppError(
+                code="AGENT_REQUIRED",
+                message="Selecione o corretor responsável pelo imóvel",
+                status_code=400,
+            )
+
         if payload.agent_user_id:
             agent = self.users.get_by_id(payload.agent_user_id)
             if not agent or agent.role != UserRole.AGENT.value or not agent.is_active:
                 raise AppError(code="INVALID_AGENT", message="Corretor inválido", status_code=400)
+            if not agent.whatsapp:
+                raise AppError(
+                    code="INCOMPLETE_AGENT",
+                    message="O corretor precisa ter WhatsApp cadastrado para publicar imóveis",
+                    status_code=400,
+                )
             return agent
 
         return None
@@ -109,6 +122,12 @@ class PropertyService:
         agent = self.users.get_by_id(agent_user_id)
         if not agent or agent.role != UserRole.AGENT.value or not agent.is_active:
             raise AppError(code="INVALID_AGENT", message="Corretor inválido", status_code=400)
+        if not agent.whatsapp:
+            raise AppError(
+                code="INCOMPLETE_AGENT",
+                message="O corretor precisa ter WhatsApp cadastrado",
+                status_code=400,
+            )
         return agent
 
     def create(self, payload: PropertyCreate, user: CurrentUser) -> PropertyResponse:
@@ -220,3 +239,13 @@ class PropertyService:
 
         recorded = self.analytics.record_event(property_id, payload.event_type, payload.session_hash)
         return PropertyEventResponse(recorded=recorded)
+
+    def list_similar(self, property_id: UUID) -> list[PropertyResponse]:
+        property_ = self.repository.get_by_id(property_id)
+        if not property_:
+            raise NotFoundError("Imóvel não encontrado")
+        if not property_.agent_whatsapp:
+            raise NotFoundError("Imóvel não encontrado")
+
+        items = self.repository.list_similar(property_id, limit=3)
+        return [self._to_response(item) for item in items]

@@ -54,3 +54,6 @@ class PropertyController:
 
     def record_event(self, property_id: UUID, payload: PropertyEventCreate) -> PropertyEventResponse:
         return self.service.record_event(property_id, payload)
+
+    def list_similar(self, property_id: UUID) -> list[PropertyResponse]:
+        return self.service.list_similar(property_id)

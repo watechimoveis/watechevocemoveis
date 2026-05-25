@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { mediaUrl } from '../../lib/api'
+import { recordPropertyEvent } from '../../services/analyticsService'
 import type { Property } from '../../types/property'
 import { getCoverImage, LISTING_LABELS } from '../../types/property'
 import { getAgentFirstName } from '../../utils/agent'
@@ -15,9 +16,10 @@ export function PropertyCard({ property }: PropertyCardProps) {
     property.agent_whatsapp,
     propertyWhatsAppMessage(property),
   )
+  const agentLabel = property.agent_name ? getAgentFirstName(property.agent_name) : null
+  const creciLabel = property.agent_creci ? `CRECI ${property.agent_creci}` : null
   const cover = getCoverImage(property)
   const coverSrc = mediaUrl(cover)
-  const agentLabel = property.agent_name ? getAgentFirstName(property.agent_name) : null
 
   return (
     <article className="flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:shadow-md">
@@ -59,6 +61,9 @@ export function PropertyCard({ property }: PropertyCardProps) {
           {property.location && (
             <p className="mt-0.5 line-clamp-1 text-sm text-slate-500">{property.location}</p>
           )}
+          {creciLabel && (
+            <p className="mt-1 text-xs text-slate-400">{creciLabel}</p>
+          )}
         </Link>
 
         <PropertyFeatures property={property} />
@@ -75,6 +80,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
             size="sm"
             label={agentLabel ? agentLabel : 'WhatsApp'}
             className="!py-2 !text-xs sm:!text-sm"
+            onTrackClick={() => recordPropertyEvent(property.id, 'whatsapp_click')}
           />
         </div>
       </div>

@@ -2,8 +2,9 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { AgentContactCard } from '../components/properties/AgentContactCard'
 import { PropertyGallery } from '../components/properties/PropertyGallery'
+import { SimilarProperties } from '../components/properties/SimilarProperties'
 import { WhatsAppButton } from '../components/ui/WhatsAppButton'
-import { usePageTitle } from '../hooks/usePageTitle'
+import { usePropertySeo } from '../hooks/usePageTitle'
 import { recordPropertyEvent } from '../services/analyticsService'
 import { getProperty } from '../services/propertiesService'
 import type { Property } from '../types/property'
@@ -51,7 +52,7 @@ export function PropertyDetailPage() {
     recordPropertyEvent(id, 'view')
   }, [id, loading, error, property])
 
-  usePageTitle(property?.title || (loading ? null : undefined))
+  usePropertySeo(property)
 
   if (loading) {
     return (
@@ -161,6 +162,8 @@ export function PropertyDetailPage() {
                 <p className="mt-3 whitespace-pre-line leading-relaxed text-slate-600">{property.description}</p>
               </div>
             )}
+
+            <SimilarProperties propertyId={property.id} />
           </div>
 
           <div className="mt-8 lg:mt-0">

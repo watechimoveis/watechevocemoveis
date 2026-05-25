@@ -42,6 +42,9 @@ def list_properties(
     listing_type: str | None = Query(default=None, pattern="^(sale|rent)$"),
     min_price: Decimal | None = Query(default=None, ge=0),
     max_price: Decimal | None = Query(default=None, ge=0),
+    location: str | None = Query(default=None, max_length=120),
+    min_rooms: int | None = Query(default=None, ge=1, le=20),
+    min_size: int | None = Query(default=None, ge=1),
     sort: str = Query(default="recent", pattern="^(recent|price_asc|price_desc)$"),
     user: CurrentUser | None = Depends(get_optional_user),
     controller: PropertyController = Depends(get_controller),
@@ -50,9 +53,20 @@ def list_properties(
         listing_type=listing_type,
         min_price=min_price,
         max_price=max_price,
+        location=location,
+        min_rooms=min_rooms,
+        min_size=min_size,
         sort=sort,
     )
     return controller.list_properties(page, limit, user, filters)
+
+
+@router.get("/{property_id}/similar", response_model=list[PropertyResponse])
+def list_similar_properties(
+    property_id: UUID,
+    controller: PropertyController = Depends(get_controller),
+):
+    return controller.list_similar(property_id)
 
 
 @router.get("/{property_id}", response_model=PropertyResponse)
