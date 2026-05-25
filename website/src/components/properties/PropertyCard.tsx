@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { mediaUrl } from '../../lib/api'
 import type { Property } from '../../types/property'
 import { getCoverImage, LISTING_LABELS } from '../../types/property'
 import { getAgentFirstName } from '../../utils/agent'
@@ -15,15 +16,16 @@ export function PropertyCard({ property }: PropertyCardProps) {
     propertyWhatsAppMessage(property),
   )
   const cover = getCoverImage(property)
+  const coverSrc = mediaUrl(cover)
   const agentLabel = property.agent_name ? getAgentFirstName(property.agent_name) : null
 
   return (
     <article className="flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:shadow-md">
       <Link to={`/imovel/${property.id}`} className="relative block">
         <div className="aspect-[4/3] bg-slate-100">
-          {cover ? (
+          {coverSrc ? (
             <img
-              src={cover}
+              src={coverSrc}
               alt={property.title || 'Imóvel'}
               className="h-full w-full object-cover"
               loading="lazy"

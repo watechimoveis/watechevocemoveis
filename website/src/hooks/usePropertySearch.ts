@@ -38,12 +38,23 @@ export function usePropertySearch() {
       setTotal(data.total)
       setPages(data.pages)
       setPage(data.page)
-    } catch {
-      setError('Não foi possível carregar os imóveis.')
+    } catch (err) {
+      setProperties([])
+      setTotal(0)
+      setPages(0)
+      if (err instanceof TypeError) {
+        setError('Não foi possível conectar ao servidor. Aguarde alguns segundos e tente novamente.')
+      } else {
+        setError('Não foi possível carregar os imóveis.')
+      }
     } finally {
       setLoading(false)
     }
   }, [])
+
+  const retry = useCallback(() => {
+    load(searchParams, Number(searchParams.get('page') || 1))
+  }, [load, searchParams])
 
   useEffect(() => {
     load(searchParams, Number(searchParams.get('page') || 1))
@@ -77,6 +88,7 @@ export function usePropertySearch() {
     goToPage,
     loading,
     error,
+    retry,
   }
 }
 

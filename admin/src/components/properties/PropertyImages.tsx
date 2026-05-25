@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react'
+import { mediaUrl } from '../../lib/api'
 import { deletePropertyImage, uploadPropertyImages } from '../../services/propertiesService'
 import type { Property, PropertyImage } from '../../types/property'
 import { HttpError } from '../../services/api'
@@ -80,7 +81,7 @@ export function PropertyImages({ property, onChange }: PropertyImagesProps) {
           {property.images.map((image, index) => (
             <div key={image.id} className="group relative aspect-square overflow-hidden rounded-lg bg-slate-100">
               <img
-                src={image.url}
+                src={mediaUrl(image.url)}
                 alt={`Foto ${index + 1}`}
                 className="h-full w-full object-cover"
               />

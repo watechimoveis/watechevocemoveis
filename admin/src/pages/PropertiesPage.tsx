@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import { mediaUrl } from '../lib/api'
 import { PropertyForm } from '../components/properties/PropertyForm'
 import { Button } from '../components/ui/Button'
 import { Modal } from '../components/ui/Modal'
@@ -224,7 +225,7 @@ export function PropertiesPage() {
                     <td className="px-4 py-3">
                       {property.images?.[0] ? (
                         <img
-                          src={property.images[0].url}
+                          src={mediaUrl(property.images[0].url)}
                           alt=""
                           className="h-10 w-10 rounded-lg object-cover"
                         />

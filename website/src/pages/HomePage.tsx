@@ -1,8 +1,13 @@
 import { PropertyCard } from '../components/properties/PropertyCard'
 import { PropertyFilters } from '../components/search/PropertyFilters'
+import { usePageTitle } from '../hooks/usePageTitle'
 import { usePropertySearch } from '../hooks/usePropertySearch'
 
+const ADMIN_URL = import.meta.env.VITE_ADMIN_URL || 'http://localhost:5173'
+
 export function HomePage() {
+  usePageTitle(null)
+
   const {
     draft,
     setDraft,
@@ -14,7 +19,10 @@ export function HomePage() {
     goToPage,
     loading,
     error,
+    retry,
   } = usePropertySearch()
+
+  const showEmpty = !loading && !error && properties.length === 0
 
   return (
     <>
@@ -23,13 +31,23 @@ export function HomePage() {
         onChange={setDraft}
         onSearch={applySearch}
         loading={loading}
-        total={loading ? undefined : total}
+        total={loading || error ? undefined : total}
       />
 
       <main className="mx-auto max-w-6xl px-4 py-5 sm:px-6 sm:py-6">
         {error && (
-          <div className="mb-4 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">
-            {error}
+          <div
+            className="mb-4 flex flex-col gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 sm:flex-row sm:items-center sm:justify-between"
+            role="alert"
+          >
+            <p>{error}</p>
+            <button
+              type="button"
+              onClick={retry}
+              className="shrink-0 rounded-lg bg-red-100 px-3 py-1.5 text-xs font-semibold text-red-800 hover:bg-red-200"
+            >
+              Tentar novamente
+            </button>
           </div>
         )}
 
@@ -39,12 +57,20 @@ export function HomePage() {
               <div key={i} className="h-72 animate-pulse rounded-2xl bg-slate-200/70" />
             ))}
           </div>
-        ) : properties.length === 0 ? (
+        ) : showEmpty ? (
           <div className="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-16 text-center">
-            <p className="text-lg font-medium text-slate-800">Nenhum imóvel encontrado</p>
-            <p className="mt-2 text-sm text-slate-500">Ajuste os filtros e busque novamente.</p>
+            <p className="text-lg font-medium text-slate-800">Nenhum imóvel disponível no momento</p>
+            <p className="mt-2 text-sm text-slate-500">
+              Novos anúncios aparecem aqui assim que forem publicados no painel.
+            </p>
+            <a
+              href={ADMIN_URL}
+              className="mt-6 inline-flex rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
+            >
+              Acessar painel do corretor
+            </a>
           </div>
-        ) : (
+        ) : !error ? (
           <>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {properties.map((property) => (
@@ -76,7 +102,7 @@ export function HomePage() {
               </div>
             )}
           </>
-        )}
+        ) : null}
       </main>
     </>
   )

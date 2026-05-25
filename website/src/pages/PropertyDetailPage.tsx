@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import { AgentContactCard } from '../components/properties/AgentContactCard'
 import { PropertyGallery } from '../components/properties/PropertyGallery'
 import { WhatsAppButton } from '../components/ui/WhatsAppButton'
+import { usePageTitle } from '../hooks/usePageTitle'
 import { recordPropertyEvent } from '../services/analyticsService'
 import { getProperty } from '../services/propertiesService'
 import type { Property } from '../types/property'
@@ -49,6 +50,8 @@ export function PropertyDetailPage() {
     viewTracked.current = true
     recordPropertyEvent(id, 'view')
   }, [id, loading, error, property])
+
+  usePageTitle(property?.title || (loading ? null : undefined))
 
   if (loading) {
     return (

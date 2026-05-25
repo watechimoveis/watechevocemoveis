@@ -11,7 +11,7 @@ export function LoginPage() {
   const { login } = useAuth()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const [email, setEmail] = useState('admin@watech.com')
+  const [email, setEmail] = useState('teste@watechimoveis.com')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)

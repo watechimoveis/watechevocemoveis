@@ -1,3 +1,4 @@
+import { apiUrl } from '../lib/api'
 import type { ApiError } from '../types/property'
 import type { User } from '../types/user'
 
@@ -52,7 +53,7 @@ export async function apiRequest<T>(
     if (token) headers.set('Authorization', `Bearer ${token}`)
   }
 
-  const response = await fetch(`/api/v1${path}`, {
+  const response = await fetch(apiUrl(`/api/v1${path}`), {
     ...options,
     headers,
   })
@@ -79,7 +80,7 @@ export async function apiUpload<T>(path: string, formData: FormData): Promise<T>
   const token = getAccessToken()
   if (token) headers.set('Authorization', `Bearer ${token}`)
 
-  const response = await fetch(`/api/v1${path}`, {
+  const response = await fetch(apiUrl(`/api/v1${path}`), {
     method: 'POST',
     headers,
     body: formData,

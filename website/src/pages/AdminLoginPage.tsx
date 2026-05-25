@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
+import { apiUrl } from '../lib/api'
 
 const ADMIN_URL = import.meta.env.VITE_ADMIN_URL || 'http://localhost:5173'
 
@@ -18,7 +19,7 @@ export function AdminLoginPage() {
     setError('')
     setLoading(true)
     try {
-      const response = await fetch('/api/v1/auth/login', {
+      const response = await fetch(apiUrl('/api/v1/auth/login'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),

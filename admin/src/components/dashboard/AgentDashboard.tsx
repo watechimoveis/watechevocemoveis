@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { mediaUrl } from '../../lib/api'
 import { useAuth } from '../../hooks/useAuth'
 import { listProperties } from '../../services/propertiesService'
 import type { Property } from '../../types/property'
@@ -109,7 +110,7 @@ export function AgentDashboard() {
                   className="flex items-center gap-4 px-4 py-3 transition hover:bg-slate-50"
                 >
                   {property.images[0] ? (
-                    <img src={property.images[0].url} alt="" className="h-12 w-12 rounded-lg object-cover" />
+                    <img src={mediaUrl(property.images[0].url)} alt="" className="h-12 w-12 rounded-lg object-cover" />
                   ) : (
                     <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-slate-100 text-slate-400">
                       —

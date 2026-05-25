@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+import logging
 from pathlib import Path
 
 from fastapi import FastAPI
@@ -14,11 +15,16 @@ from app.shared.database.session import SessionLocal
 from app.shared.errors.handlers import register_exception_handlers
 
 
+logger = logging.getLogger(__name__)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     db = SessionLocal()
     try:
         seed_admin_user(db)
+    except Exception:
+        logger.exception("Falha ao criar usuário admin inicial — a API continua sem seed")
     finally:
         db.close()
     yield

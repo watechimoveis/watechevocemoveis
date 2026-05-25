@@ -1,3 +1,4 @@
+import { apiUrl } from '../lib/api'
 import type { Property, PropertyListResponse, PropertySearchParams } from '../types/property'
 
 function buildQuery(params: PropertySearchParams): string {
@@ -13,13 +14,13 @@ function buildQuery(params: PropertySearchParams): string {
 
 export async function searchProperties(params: PropertySearchParams = {}): Promise<PropertyListResponse> {
   const query = buildQuery({ limit: 12, sort: 'recent', ...params })
-  const response = await fetch(`/api/v1/properties?${query}`)
+  const response = await fetch(apiUrl(`/api/v1/properties?${query}`))
   if (!response.ok) throw new Error('Erro ao carregar imóveis')
   return response.json()
 }
 
 export async function getProperty(id: string): Promise<Property> {
-  const response = await fetch(`/api/v1/properties/${id}`)
+  const response = await fetch(apiUrl(`/api/v1/properties/${id}`))
   if (!response.ok) throw new Error('Imóvel não encontrado')
   return response.json()
 }

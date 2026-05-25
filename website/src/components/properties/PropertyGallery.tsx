@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { mediaUrl } from '../../lib/api'
 import type { PropertyImage } from '../../types/property'
 
 interface PropertyGalleryProps {
@@ -28,7 +29,7 @@ export function PropertyGallery({ images, title }: PropertyGalleryProps) {
     <div className="space-y-3">
       <div className="overflow-hidden rounded-2xl bg-slate-100">
         <img
-          src={active.url}
+          src={mediaUrl(active.url)}
           alt={alt}
           className="aspect-[16/9] w-full object-cover"
         />
@@ -45,7 +46,7 @@ export function PropertyGallery({ images, title }: PropertyGalleryProps) {
                 index === activeIndex ? 'border-blue-600' : 'border-transparent opacity-70 hover:opacity-100'
               }`}
             >
-              <img src={image.url} alt="" className="h-full w-full object-cover" />
+              <img src={mediaUrl(image.url)} alt="" className="h-full w-full object-cover" />
             </button>
           ))}
         </div>
