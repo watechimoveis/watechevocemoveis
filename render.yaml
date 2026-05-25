@@ -1,9 +1,8 @@
 # Blueprint Render — W.A.Techevoceimoveis
-# Deploy: Render Dashboard → New → Blueprint → conectar repo GitHub
-# Antes do 1º deploy: preencher DATABASE_URL (Supabase) e ADMIN_PASSWORD no painel.
+# Deploy: Render Dashboard → New → Blueprint → repo GitHub
+# Preencher no 1º deploy: DATABASE_URL e ADMIN_PASSWORD (watech-api)
 
 services:
-  # ── API FastAPI ──────────────────────────────────────────────
   - type: web
     name: watech-api
     runtime: python
@@ -11,8 +10,8 @@ services:
     region: oregon
     rootDir: backend
     buildCommand: pip install -r requirements.txt
+    preDeployCommand: alembic upgrade head
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
-    releaseCommand: alembic upgrade head
     healthCheckPath: /health
     envVars:
       - key: PYTHON_VERSION
@@ -36,7 +35,6 @@ services:
       - key: CORS_ORIGINS
         value: https://watech-site.onrender.com,https://watech-admin.onrender.com
 
-  # ── Painel admin (corretor / administrador) ──────────────────
   - type: web
     name: watech-admin
     runtime: static
@@ -57,7 +55,6 @@ services:
         source: /*
         destination: /index.html
 
-  # ── Site público ─────────────────────────────────────────────
   - type: web
     name: watech-site
     runtime: static
@@ -68,10 +65,7 @@ services:
       - key: NODE_VERSION
         value: "20"
       - key: VITE_ADMIN_URL
-        fromService:
-          type: web
-          name: watech-admin
-          envVarKey: RENDER_EXTERNAL_URL
+        value: https://watech-admin.onrender.com
     routes:
       - type: rewrite
         source: /api/*
