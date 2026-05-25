@@ -14,6 +14,13 @@ class Settings(BaseSettings):
     jwt_expire_minutes: int = 480
     upload_dir: str = "uploads"
     max_upload_mb: int = 5
+    supabase_url: str = ""
+    supabase_service_role_key: str = ""
+    storage_bucket: str = "property-images"
+
+    @property
+    def use_supabase_storage(self) -> bool:
+        return bool(self.supabase_url.strip() and self.supabase_service_role_key.strip())
 
     @property
     def cors_origin_list(self) -> list[str]:

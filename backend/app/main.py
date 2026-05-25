@@ -13,6 +13,7 @@ from app.modules.users.router import router as agents_router
 from app.shared.database.seed import seed_admin_user
 from app.shared.database.session import SessionLocal
 from app.shared.errors.handlers import register_exception_handlers
+from app.shared.storage import supabase_storage
 
 
 logger = logging.getLogger(__name__)
@@ -20,6 +21,12 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    if settings.use_supabase_storage:
+        supabase_storage.ensure_bucket()
+        logger.info("Storage de fotos: Supabase (%s)", settings.storage_bucket)
+    else:
+        logger.info("Storage de fotos: disco local (%s)", settings.upload_dir)
+
     db = SessionLocal()
     try:
         seed_admin_user(db)
@@ -59,7 +66,10 @@ def create_app() -> FastAPI:
 
     @app.get("/health")
     def health():
-        return {"status": "ok"}
+        return {
+            "status": "ok",
+            "storage": "supabase" if settings.use_supabase_storage else "local",
+        }
 
     return app
 
