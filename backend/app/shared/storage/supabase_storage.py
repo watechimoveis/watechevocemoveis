@@ -97,16 +97,13 @@ def delete_objects(object_paths: list[str]) -> None:
     if not object_paths:
         return
 
-    url = f"{_base_url()}/storage/v1/object/{settings.storage_bucket}"
     try:
         with httpx.Client(timeout=30.0) as client:
-            response = client.request(
-                "DELETE",
-                url,
-                headers={**_headers(), "Content-Type": "application/json"},
-                json=object_paths,
-            )
-            response.raise_for_status()
+            for object_path in object_paths:
+                url = f"{_base_url()}/storage/v1/object/{settings.storage_bucket}/{object_path}"
+                response = client.delete(url, headers=_headers())
+                if response.status_code not in (200, 204, 404):
+                    response.raise_for_status()
     except httpx.HTTPError:
         logger.exception("Falha ao remover objetos do Supabase Storage")
 
