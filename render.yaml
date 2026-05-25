@@ -1,0 +1,84 @@
+# Blueprint Render — W.A.Techevoceimoveis
+# Deploy: Render Dashboard → New → Blueprint → conectar repo GitHub
+# Antes do 1º deploy: preencher DATABASE_URL (Supabase) e ADMIN_PASSWORD no painel.
+
+services:
+  # ── API FastAPI ──────────────────────────────────────────────
+  - type: web
+    name: watech-api
+    runtime: python
+    plan: free
+    region: oregon
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    releaseCommand: alembic upgrade head
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.0"
+      - key: APP_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRE_MINUTES
+        value: "480"
+      - key: ADMIN_EMAIL
+        value: admin@watech.com
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: UPLOAD_DIR
+        value: uploads
+      - key: MAX_UPLOAD_MB
+        value: "5"
+      - key: CORS_ORIGINS
+        value: https://watech-site.onrender.com,https://watech-admin.onrender.com
+
+  # ── Painel admin (corretor / administrador) ──────────────────
+  - type: web
+    name: watech-admin
+    runtime: static
+    rootDir: admin
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+    routes:
+      - type: rewrite
+        source: /api/*
+        destination: https://watech-api.onrender.com/api/*
+      - type: rewrite
+        source: /uploads/*
+        destination: https://watech-api.onrender.com/uploads/*
+      - type: rewrite
+        source: /*
+        destination: /index.html
+
+  # ── Site público ─────────────────────────────────────────────
+  - type: web
+    name: watech-site
+    runtime: static
+    rootDir: website
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      - key: VITE_ADMIN_URL
+        fromService:
+          type: web
+          name: watech-admin
+          envVarKey: RENDER_EXTERNAL_URL
+    routes:
+      - type: rewrite
+        source: /api/*
+        destination: https://watech-api.onrender.com/api/*
+      - type: rewrite
+        source: /uploads/*
+        destination: https://watech-api.onrender.com/uploads/*
+      - type: rewrite
+        source: /*
+        destination: /index.html

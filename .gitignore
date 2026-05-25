@@ -1,0 +1,46 @@
+# Environment & secrets
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+backend/.venv/
+backend/venv/
+*.so
+
+# Node
+node_modules/
+dist/
+dist-ssr/
+*.local
+.npm
+
+# Uploads (local dev only — production uses Render disk or future object storage)
+backend/uploads/*
+!backend/uploads/.gitkeep
+
+# OS & editors
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Cursor / tooling
+.cursor/
