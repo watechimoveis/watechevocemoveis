@@ -38,7 +38,7 @@ class UserService:
                 "password_hash": hash_password(payload.password),
                 "name": payload.name.strip(),
                 "creci": payload.creci.strip() if payload.creci else None,
-                "whatsapp": _digits(payload.whatsapp),
+                "whatsapp": _normalize_whatsapp(payload.whatsapp),
                 "role": UserRole.AGENT.value,
                 "is_active": True,
             }
@@ -61,7 +61,7 @@ class UserService:
         if payload.creci is not None:
             data["creci"] = payload.creci.strip() or None
         if payload.whatsapp is not None:
-            data["whatsapp"] = _digits(payload.whatsapp)
+            data["whatsapp"] = _normalize_whatsapp(payload.whatsapp)
         if payload.is_active is not None:
             data["is_active"] = payload.is_active
         if payload.password:
@@ -88,11 +88,11 @@ class UserService:
         if not db_user:
             raise AppError(code="NOT_FOUND", message="Usuário não encontrado", status_code=404)
 
-        digits = _digits(payload.whatsapp)
-        if not digits or len(digits) < 10:
+        digits = _normalize_whatsapp(payload.whatsapp)
+        if not digits or len(digits) < 12:
             raise AppError(
                 code="INVALID_WHATSAPP",
-                message="Informe um WhatsApp válido com DDD (ex: 22999999999)",
+                message="Informe um WhatsApp válido com DDD e número (ex: 22 99999-9999)",
                 status_code=400,
             )
 
@@ -110,3 +110,12 @@ def _digits(value: str | None) -> str | None:
         return None
     digits = "".join(c for c in value if c.isdigit())
     return digits or None
+
+
+def _normalize_whatsapp(value: str | None) -> str | None:
+    digits = _digits(value)
+    if not digits:
+        return None
+    if len(digits) in (10, 11) and not digits.startswith("55"):
+        digits = f"55{digits}"
+    return digits

@@ -1,12 +1,22 @@
 export function formatWhatsAppPhone(phone: string | null | undefined): string {
   if (!phone) return '—'
   const digits = phone.replace(/\D/g, '')
-  if (digits.length >= 12 && digits.startsWith('55')) {
-    const ddd = digits.slice(2, 4)
-    const rest = digits.slice(4)
-    if (rest.length === 9) return `+55 (${ddd}) ${rest.slice(0, 5)}-${rest.slice(5)}`
-    if (rest.length === 8) return `+55 (${ddd}) ${rest.slice(0, 4)}-${rest.slice(4)}`
+
+  let ddd: string
+  let rest: string
+
+  if (digits.startsWith('55') && digits.length >= 12) {
+    ddd = digits.slice(2, 4)
+    rest = digits.slice(4)
+  } else if (digits.length >= 10) {
+    ddd = digits.slice(0, 2)
+    rest = digits.slice(2)
+  } else {
+    return phone
   }
+
+  if (rest.length === 9) return `(${ddd}) ${rest.slice(0, 5)}-${rest.slice(5)}`
+  if (rest.length === 8) return `(${ddd}) ${rest.slice(0, 4)}-${rest.slice(4)}`
   return phone
 }
 

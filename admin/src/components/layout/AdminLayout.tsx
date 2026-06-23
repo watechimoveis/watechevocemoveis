@@ -1,6 +1,7 @@
 import { Link, Navigate, Outlet, useLocation } from 'react-router-dom'
 import { BrandLogo } from '../brand/BrandLogo'
 import { useAuth } from '../../hooks/useAuth'
+import { getAgentInitials } from '../../utils/agent'
 import { Button } from '../ui/Button'
 
 export function AdminLayout() {
@@ -29,13 +30,25 @@ export function AdminLayout() {
               )}
             </nav>
           </div>
-          <div className="flex shrink-0 items-center gap-2 sm:gap-3">
-            <p className="type-meta hidden text-slate-500 sm:block">{isAdmin ? 'Administrador' : 'Corretor'}</p>
-            <div className="hidden text-right md:block">
-              <p className="text-sm font-medium text-slate-800 xl:text-base">{user?.name}</p>
-              <p className="type-meta text-slate-500">{user?.email}</p>
+          <div className="flex shrink-0 items-center gap-3 sm:gap-4">
+            <div className="hidden items-center gap-3 sm:flex">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-700 xl:h-10 xl:w-10 xl:text-sm">
+                {getAgentInitials(user?.name)}
+              </span>
+              <div className="hidden min-w-0 text-right md:block">
+                <div className="flex items-center justify-end gap-2">
+                  <p className="truncate text-sm font-medium text-slate-900 xl:text-base">{user?.name}</p>
+                  <span className="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-[0.6875rem] font-semibold uppercase tracking-wide text-slate-600 xl:text-xs">
+                    {isAdmin ? 'Admin' : 'Corretor'}
+                  </span>
+                </div>
+                <p className="mt-0.5 truncate type-meta text-slate-500 lg:max-w-[14rem] xl:max-w-[18rem]">
+                  {user?.email}
+                </p>
+              </div>
             </div>
-            <Button variant="ghost" size="sm" onClick={logout}>
+            <span className="hidden h-8 w-px bg-slate-200 sm:block" aria-hidden="true" />
+            <Button variant="ghost" size="sm" className="shrink-0 px-3" onClick={logout}>
               Sair
             </Button>
           </div>

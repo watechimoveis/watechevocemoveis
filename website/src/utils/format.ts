@@ -15,8 +15,11 @@ export function formatPrice(
 
 export function buildWhatsAppUrl(phone: string | null | undefined, message: string): string | null {
   if (!phone) return null
-  const digits = phone.replace(/\D/g, '')
+  let digits = phone.replace(/\D/g, '')
   if (!digits) return null
+  if ((digits.length === 10 || digits.length === 11) && !digits.startsWith('55')) {
+    digits = `55${digits}`
+  }
   return `https://wa.me/${digits}?text=${encodeURIComponent(message)}`
 }
 
