@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import loginBg from '../../assets/bgterrenos.png'
+import loginBg from '../../assets/bgterrenos01.png'
 
 interface LoginBackdropProps {
   children: ReactNode
