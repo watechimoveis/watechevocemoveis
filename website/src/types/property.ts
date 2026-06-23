@@ -1,4 +1,6 @@
 export type ListingType = 'sale' | 'rent'
+export type PropertyType = 'house' | 'apartment' | 'land'
+export type PropertyCategory = 'land' | 'residential'
 export type SortOption = 'recent' | 'price_asc' | 'price_desc'
 
 export interface PropertyImage {
@@ -18,6 +20,7 @@ export interface Property {
   id: string
   title: string | null
   listing_type: ListingType
+  property_type: PropertyType
   location: string | null
   price: number | null
   description: string | null
@@ -46,6 +49,8 @@ export interface PropertySearchParams {
   page?: number
   limit?: number
   listing_type?: ListingType
+  category?: PropertyCategory
+  property_type?: PropertyType
   location?: string
   min_price?: number
   max_price?: number
@@ -61,4 +66,10 @@ export function getCoverImage(property: Property): string | null {
 export const LISTING_LABELS: Record<ListingType, string> = {
   sale: 'Compra',
   rent: 'Aluguel',
+}
+
+export const PROPERTY_TYPE_LABELS: Record<PropertyType, string> = {
+  house: 'Casa',
+  apartment: 'Apartamento',
+  land: 'Terreno',
 }

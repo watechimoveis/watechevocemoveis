@@ -6,6 +6,8 @@ function buildQuery(params: PropertySearchParams): string {
   if (params.page) q.set('page', String(params.page))
   if (params.limit) q.set('limit', String(params.limit))
   if (params.listing_type) q.set('listing_type', params.listing_type)
+  if (params.category) q.set('category', params.category)
+  if (params.property_type) q.set('property_type', params.property_type)
   if (params.location?.trim()) q.set('location', params.location.trim())
   if (params.min_price != null && params.min_price > 0) q.set('min_price', String(params.min_price))
   if (params.max_price != null && params.max_price > 0) q.set('max_price', String(params.max_price))

@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import { mediaUrl } from '../../lib/api'
 import { recordPropertyEvent } from '../../services/analyticsService'
 import type { Property } from '../../types/property'
-import { getCoverImage, LISTING_LABELS } from '../../types/property'
+import { getCoverImage, LISTING_LABELS, PROPERTY_TYPE_LABELS } from '../../types/property'
 import { getAgentFirstName } from '../../utils/agent'
 import { buildWhatsAppUrl, formatPrice, propertyWhatsAppMessage } from '../../utils/format'
 import { WhatsAppButton } from '../ui/WhatsAppButton'
@@ -41,6 +41,9 @@ export function PropertyCard({ property }: PropertyCardProps) {
           )}
         </div>
         <span className="absolute left-2 top-2 rounded-md bg-blue-600 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-white">
+          {PROPERTY_TYPE_LABELS[property.property_type] || 'Imóvel'}
+        </span>
+        <span className="absolute left-2 top-8 rounded-md bg-slate-900/70 px-2 py-0.5 text-[11px] font-medium text-white">
           {LISTING_LABELS[property.listing_type]}
         </span>
         {property.images.length > 1 && (
@@ -89,11 +92,12 @@ export function PropertyCard({ property }: PropertyCardProps) {
 }
 
 function PropertyFeatures({ property }: { property: Property }) {
+  const isLand = property.property_type === 'land'
   const features = [
-    property.rooms != null && `${property.rooms} qt`,
-    property.bathrooms != null && `${property.bathrooms} bh`,
+    !isLand && property.rooms != null && `${property.rooms} qt`,
+    !isLand && property.bathrooms != null && `${property.bathrooms} bh`,
     property.size != null && `${property.size} m²`,
-    property.parking != null && `${property.parking} vg`,
+    !isLand && property.parking != null && `${property.parking} vg`,
   ].filter(Boolean)
 
   if (features.length === 0) return null

@@ -34,6 +34,7 @@ class PropertyBase(BaseModel):
 
     title: str | None = None
     listing_type: str | None = "sale"
+    property_type: str | None = "land"
     location: str | None = None
     price: Decimal | None = None
     description: str | None = None
@@ -56,6 +57,7 @@ class PropertyResponse(PropertyBase):
 
     id: UUID
     listing_type: str = "sale"
+    property_type: str = "land"
     agent_user_id: UUID | None = None
     agent_name: str | None = None
     agent_creci: str | None = None

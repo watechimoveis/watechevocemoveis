@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { BrandLogo } from '../components/brand/BrandLogo'
 import { LoginBackdrop } from '../components/brand/LoginBackdrop'
+import { LoginShell } from '../components/brand/LoginShell'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
 import { useAuth } from '../hooks/useAuth'
@@ -55,52 +55,46 @@ export function LoginPage() {
 
   return (
     <LoginBackdrop>
-      <div className="flex flex-1 items-center justify-center px-4 py-12">
-        <div className="w-full max-w-sm">
-          <div className="mb-8 text-center">
-            <div className="flex justify-center">
-              <BrandLogo size="lg" variant="light" showTagline />
+      <LoginShell
+        title="Área do corretor"
+        subtitle="Entre para cadastrar terrenos, acompanhar leads e gerenciar seus anúncios."
+      >
+        <form
+          onSubmit={handleSubmit}
+          className="rounded-2xl border border-white/10 bg-white/95 p-6 shadow-2xl backdrop-blur-sm"
+        >
+          {error && (
+            <div className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">
+              {error}
             </div>
-            <p className="mt-5 text-sm text-slate-300">Entrar no painel administrativo</p>
+          )}
+
+          <div className="space-y-4">
+            <Input
+              label="E-mail"
+              name="email"
+              type="email"
+              autoComplete="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+            <Input
+              label="Senha"
+              name="password"
+              type="password"
+              autoComplete="current-password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
           </div>
 
-          <form
-            onSubmit={handleSubmit}
-            className="rounded-2xl border border-white/10 bg-white/95 p-6 shadow-2xl backdrop-blur-sm"
-          >
-            {error && (
-              <div className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">
-                {error}
-              </div>
-            )}
-
-            <div className="space-y-4">
-              <Input
-                label="E-mail"
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-              <Input
-                label="Senha"
-                name="password"
-                type="password"
-                autoComplete="current-password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
-
-            <Button type="submit" className="mt-6 w-full !bg-amber-600 hover:!bg-amber-500" disabled={loading}>
-              {loading ? 'Entrando…' : 'Entrar'}
-            </Button>
-          </form>
-        </div>
-      </div>
+          <Button type="submit" className="mt-6 w-full !bg-amber-600 hover:!bg-amber-500" disabled={loading}>
+            {loading ? 'Entrando…' : 'Entrar no painel'}
+          </Button>
+        </form>
+      </LoginShell>
     </LoginBackdrop>
   )
 }

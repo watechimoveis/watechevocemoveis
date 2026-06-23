@@ -19,6 +19,7 @@ import { whatsappConversionRate } from '../utils/analytics'
 type ModalMode = 'create' | 'edit' | 'delete' | null
 
 const LISTING_LABEL: Record<string, string> = { sale: 'Compra', rent: 'Aluguel' }
+const TYPE_LABEL: Record<string, string> = { house: 'Casa', apartment: 'Apto', land: 'Terreno' }
 
 export function PropertiesPage() {
   const { isAdmin } = useAuth()
@@ -116,20 +117,22 @@ export function PropertiesPage() {
     resetModal()
   }
 
-  async function handleSave(payload: PropertyPayload) {
+  async function handleSave(payload: PropertyPayload): Promise<Property | void> {
     setSubmitting(true)
     try {
       if (modalMode === 'edit' && selected) {
-        await updateProperty(selected.id, payload)
+        const updated = await updateProperty(selected.id, payload)
         setToast('Anúncio atualizado — já está no site')
         resetModal()
-      } else {
-        const created = await createProperty(payload)
-        setSelected(created)
-        setModalMode('edit')
-        setToast('Anúncio criado — adicione fotos para publicar no site')
+        await load(page)
+        return updated
       }
+      const created = await createProperty(payload)
+      setSelected(created)
+      setModalMode('edit')
+      setToast('Anúncio criado — adicione fotos para publicar no site')
       await load(page)
+      return created
     } catch {
       setError('Erro ao salvar anúncio.')
     } finally {
@@ -255,6 +258,8 @@ export function PropertiesPage() {
                         {property.title || <span className="italic text-slate-400">Sem título</span>}
                       </p>
                       <p className="text-xs text-slate-500">
+                        {TYPE_LABEL[property.property_type] || 'Imóvel'}
+                        {' · '}
                         {LISTING_LABEL[property.listing_type] || 'Compra'}
                         {property.location ? ` · ${property.location}` : ''}
                       </p>
@@ -430,6 +435,8 @@ function PropertyMobileCard({
             )}
           </p>
           <p className="mt-0.5 text-xs text-slate-500">
+            {TYPE_LABEL[property.property_type] || 'Imóvel'}
+            {' · '}
             {LISTING_LABEL[property.listing_type] || 'Compra'}
             {property.location ? ` · ${property.location}` : ''}
           </p>

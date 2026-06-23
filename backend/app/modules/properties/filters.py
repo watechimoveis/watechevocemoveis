@@ -5,6 +5,8 @@ from decimal import Decimal
 @dataclass
 class PropertySearchFilters:
     listing_type: str | None = None
+    property_type: str | None = None
+    category: str | None = None
     min_price: Decimal | None = None
     max_price: Decimal | None = None
     location: str | None = None

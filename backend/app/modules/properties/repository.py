@@ -20,6 +20,12 @@ class PropertyRepository:
             stmt = stmt.where(Property.agent_whatsapp.isnot(None), Property.agent_whatsapp != "")
         if filters.listing_type:
             stmt = stmt.where(Property.listing_type == filters.listing_type)
+        if filters.property_type:
+            stmt = stmt.where(Property.property_type == filters.property_type)
+        if filters.category == "land":
+            stmt = stmt.where(Property.property_type == "land")
+        elif filters.category == "residential":
+            stmt = stmt.where(Property.property_type.in_(("house", "apartment")))
         if filters.min_price is not None:
             stmt = stmt.where(Property.price >= filters.min_price)
         if filters.max_price is not None:
@@ -122,6 +128,7 @@ class PropertyRepository:
                 Property.agent_whatsapp.isnot(None),
                 Property.agent_whatsapp != "",
                 Property.listing_type == base.listing_type,
+                Property.property_type == base.property_type,
                 *extra_filters,
             )
             stmt = stmt.order_by(Property.created_at.desc()).limit(limit)

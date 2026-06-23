@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import type { ListingType, Property, SortOption } from '../types/property'
+import type { ListingType, Property, PropertyCategory, SortOption } from '../types/property'
 import { searchProperties } from '../services/propertiesService'
 import { defaultSearchState } from '../utils/searchLabels'
 
 export interface SearchState {
   listingType: ListingType
+  category: PropertyCategory | ''
   location: string
   minPrice: string
   maxPrice: string
@@ -34,6 +35,7 @@ export function usePropertySearch() {
       const data = await searchProperties({
         page: currentPage,
         listing_type: parsed.listingType,
+        category: parsed.category || undefined,
         location: parsed.location.trim() || undefined,
         min_price: parsed.minPrice ? Number(parsed.minPrice) : undefined,
         max_price: parsed.maxPrice ? Number(parsed.maxPrice) : undefined,
@@ -88,7 +90,10 @@ export function usePropertySearch() {
   const removeFilter = useCallback(
     (key: string) => {
       const next = { ...applied }
-      if (key === 'tipo') next.listingType = 'sale'
+      if (key === 'tipo') {
+        next.listingType = 'sale'
+        next.category = 'land'
+      }
       if (key === 'local') next.location = ''
       if (key === 'min') next.minPrice = ''
       if (key === 'max') next.maxPrice = ''
@@ -128,6 +133,7 @@ export function usePropertySearch() {
 function buildParams(state: SearchState): URLSearchParams {
   const next = new URLSearchParams()
   next.set('tipo', state.listingType)
+  if (state.category) next.set('cat', state.category)
   if (state.location.trim()) next.set('local', state.location.trim())
   if (state.minPrice) next.set('min', state.minPrice)
   if (state.maxPrice) next.set('max', state.maxPrice)
@@ -140,9 +146,11 @@ function buildParams(state: SearchState): URLSearchParams {
 
 function parseParams(params: URLSearchParams): SearchState {
   const tipo = params.get('tipo')
+  const cat = params.get('cat')
   const ordem = params.get('ordem')
   return {
     listingType: tipo === 'rent' ? 'rent' : 'sale',
+    category: cat === 'residential' || cat === 'land' ? cat : tipo === 'rent' ? '' : 'land',
     location: params.get('local') || '',
     minPrice: params.get('min') || '',
     maxPrice: params.get('max') || '',

@@ -51,6 +51,8 @@ services:
         value: '20'
       - key: VITE_API_URL
         value: https://watech-api.onrender.com
+      - key: VITE_SITE_URL
+        value: https://watech-site.onrender.com
     headers:
       - path: /index.html
         name: Cache-Control

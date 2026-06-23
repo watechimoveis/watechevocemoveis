@@ -1,8 +1,10 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { useAuth } from '../../hooks/useAuth'
 import { listAgents } from '../../services/agentsService'
+import { uploadPropertyImages } from '../../services/propertiesService'
 import { whatsappConversionRate } from '../../utils/analytics'
-import type { Property, PropertyPayload } from '../../types/property'
+import type { Property, PropertyPayload, PropertyType } from '../../types/property'
+import { LISTING_LABELS, PROPERTY_TYPE_LABELS } from '../../types/property'
 import type { User } from '../../types/user'
 import { formatWhatsAppPhone, getAgentInitials } from '../../utils/agent'
 import { Input, Textarea } from '../ui/Input'
@@ -14,6 +16,21 @@ interface PropertyFormProps {
   onCancel: () => void
   onPropertyChange?: (property: Property) => void
   loading?: boolean
+}
+
+const PROPERTY_TYPES: PropertyType[] = ['land', 'house', 'apartment']
+const LISTING_TYPES = ['sale', 'rent'] as const
+
+const TITLE_PLACEHOLDERS: Record<PropertyType, string> = {
+  land: 'Ex: Terreno 360m² em condomínio fechado',
+  house: 'Ex: Casa térrea 3 quartos com quintal',
+  apartment: 'Ex: Apartamento 3 quartos no Centro',
+}
+
+const DESCRIPTION_PLACEHOLDERS: Record<PropertyType, string> = {
+  land: 'Topografia, zoneamento, infraestrutura, acesso…',
+  house: 'Detalhes da casa, acabamento, área externa…',
+  apartment: 'Detalhes do apartamento, condomínio, lazer…',
 }
 
 function toFormValue(value: string | number | null | undefined): string {
@@ -35,6 +52,38 @@ function parseIntField(value: string): number | undefined {
   return Number.isNaN(num) ? undefined : num
 }
 
+function SegmentedControl<T extends string>({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label: string
+  value: T
+  options: { value: T; label: string }[]
+  onChange: (value: T) => void
+}) {
+  return (
+    <div>
+      <p className="mb-2 text-sm font-medium text-slate-700">{label}</p>
+      <div className="inline-flex flex-wrap rounded-lg bg-slate-100 p-1">
+        {options.map((option) => (
+          <button
+            key={option.value}
+            type="button"
+            onClick={() => onChange(option.value)}
+            className={`rounded-md px-3 py-1.5 text-sm font-medium sm:px-4 ${
+              value === option.value ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-600'
+            }`}
+          >
+            {option.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 export function PropertyForm({ property, onSubmit, onCancel, onPropertyChange, loading }: PropertyFormProps) {
   const { user, isAdmin, isAgent } = useAuth()
   const [agents, setAgents] = useState<User[]>([])
@@ -46,9 +95,13 @@ export function PropertyForm({ property, onSubmit, onCancel, onPropertyChange, l
   const [bathrooms, setBathrooms] = useState('')
   const [parking, setParking] = useState('')
   const [size, setSize] = useState('')
+  const [propertyType, setPropertyType] = useState<PropertyType>('land')
   const [listingType, setListingType] = useState<'sale' | 'rent'>('sale')
   const [agentUserId, setAgentUserId] = useState('')
+  const [pendingPhotos, setPendingPhotos] = useState<File[]>([])
+  const [uploadingPhotos, setUploadingPhotos] = useState(false)
 
+  const isLand = propertyType === 'land'
   const selectedAgent = agents.find((a) => a.id === agentUserId)
   const canSubmitAsAdmin =
     !isAdmin ||
@@ -73,9 +126,20 @@ export function PropertyForm({ property, onSubmit, onCancel, onPropertyChange, l
     setBathrooms(toFormValue(property?.bathrooms))
     setParking(toFormValue(property?.parking))
     setSize(toFormValue(property?.size))
+    setPropertyType(property?.property_type || 'land')
     setListingType(property?.listing_type || 'sale')
     setAgentUserId(property?.agent_user_id || '')
+    setPendingPhotos([])
   }, [property])
+
+  function handlePropertyTypeChange(next: PropertyType) {
+    setPropertyType(next)
+    if (next === 'land') {
+      setRooms('')
+      setBathrooms('')
+      setParking('')
+    }
+  }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
@@ -84,10 +148,11 @@ export function PropertyForm({ property, onSubmit, onCancel, onPropertyChange, l
       location: location.trim() || undefined,
       price: parseNumber(price),
       description: description.trim() || undefined,
-      rooms: parseIntField(rooms),
-      bathrooms: parseIntField(bathrooms),
-      parking: parseIntField(parking),
+      rooms: isLand ? null : parseIntField(rooms),
+      bathrooms: isLand ? null : parseIntField(bathrooms),
+      parking: isLand ? null : parseIntField(parking),
       size: parseNumber(size),
+      property_type: propertyType,
       listing_type: listingType,
     }
 
@@ -95,13 +160,25 @@ export function PropertyForm({ property, onSubmit, onCancel, onPropertyChange, l
       payload.agent_user_id = agentUserId
     }
 
-    await onSubmit(payload)
+    const saved = await onSubmit(payload)
+    if (!saved?.id || pendingPhotos.length === 0) return
+
+    setUploadingPhotos(true)
+    try {
+      const uploaded = await uploadPropertyImages(saved.id, pendingPhotos)
+      onPropertyChange?.({ ...saved, images: uploaded })
+      setPendingPhotos([])
+    } finally {
+      setUploadingPhotos(false)
+    }
   }
 
   function handleImagesChange(images: Property['images']) {
     if (!property || !onPropertyChange) return
     onPropertyChange({ ...property, images })
   }
+
+  const isSaving = loading || uploadingPhotos
 
   return (
     <form id="property-form" onSubmit={handleSubmit} className="space-y-6">
@@ -192,37 +269,78 @@ export function PropertyForm({ property, onSubmit, onCancel, onPropertyChange, l
         <div>
           <h3 className="text-sm font-semibold text-slate-900">Informações do imóvel</h3>
         </div>
+
         <div className="grid gap-4 sm:grid-cols-2">
-          <div>
-            <p className="mb-2 text-sm font-medium text-slate-700">Tipo</p>
-            <div className="inline-flex rounded-lg bg-slate-100 p-1">
-              {(['sale', 'rent'] as const).map((type) => (
-                <button
-                  key={type}
-                  type="button"
-                  onClick={() => setListingType(type)}
-                  className={`rounded-md px-4 py-1.5 text-sm font-medium ${
-                    listingType === type ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-600'
-                  }`}
-                >
-                  {type === 'sale' ? 'Compra' : 'Aluguel'}
-                </button>
-              ))}
-            </div>
+          <SegmentedControl
+            label="Categoria"
+            value={propertyType}
+            options={PROPERTY_TYPES.map((type) => ({ value: type, label: PROPERTY_TYPE_LABELS[type] }))}
+            onChange={handlePropertyTypeChange}
+          />
+          <SegmentedControl
+            label="Negócio"
+            value={listingType}
+            options={LISTING_TYPES.map((type) => ({ value: type, label: LISTING_LABELS[type] }))}
+            onChange={setListingType}
+          />
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Input
+            label={listingType === 'rent' ? 'Aluguel mensal (R$)' : 'Preço (R$)'}
+            name="price"
+            type="number"
+            min="0"
+            step="1"
+            placeholder={isLand ? '180000' : '450000'}
+            value={price}
+            onChange={(e) => setPrice(e.target.value)}
+          />
+          <Input
+            label="Localização"
+            name="location"
+            placeholder="Ex: Centro, Campos dos Goytacazes"
+            value={location}
+            onChange={(e) => setLocation(e.target.value)}
+          />
+        </div>
+
+        <Input
+          label="Título"
+          name="title"
+          placeholder={TITLE_PLACEHOLDERS[propertyType]}
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          autoFocus
+        />
+
+        {isLand ? (
+          <Input
+            label="Área do terreno (m²)"
+            name="size"
+            type="number"
+            min="0"
+            step="0.01"
+            placeholder="Ex: 360"
+            value={size}
+            onChange={(e) => setSize(e.target.value)}
+          />
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-4">
+            <Input label="Quartos" name="rooms" type="number" min="0" value={rooms} onChange={(e) => setRooms(e.target.value)} />
+            <Input label="Banheiros" name="bathrooms" type="number" min="0" value={bathrooms} onChange={(e) => setBathrooms(e.target.value)} />
+            <Input label="Vagas" name="parking" type="number" min="0" value={parking} onChange={(e) => setParking(e.target.value)} />
+            <Input label="Área (m²)" name="size" type="number" min="0" step="0.01" value={size} onChange={(e) => setSize(e.target.value)} />
           </div>
-          <Input label="Preço (R$)" name="price" type="number" min="0" step="1" placeholder="450000" value={price} onChange={(e) => setPrice(e.target.value)} />
-        </div>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Input label="Título" name="title" placeholder="Ex: Apartamento 3 quartos" value={title} onChange={(e) => setTitle(e.target.value)} autoFocus />
-          <Input label="Localização" name="location" placeholder="Ex: Centro, São Paulo" value={location} onChange={(e) => setLocation(e.target.value)} />
-        </div>
-        <div className="grid gap-4 sm:grid-cols-4">
-          <Input label="Quartos" name="rooms" type="number" min="0" value={rooms} onChange={(e) => setRooms(e.target.value)} />
-          <Input label="Banheiros" name="bathrooms" type="number" min="0" value={bathrooms} onChange={(e) => setBathrooms(e.target.value)} />
-          <Input label="Vagas" name="parking" type="number" min="0" value={parking} onChange={(e) => setParking(e.target.value)} />
-          <Input label="Área (m²)" name="size" type="number" min="0" step="0.01" value={size} onChange={(e) => setSize(e.target.value)} />
-        </div>
-        <Textarea label="Descrição" name="description" placeholder="Detalhes do imóvel…" value={description} onChange={(e) => setDescription(e.target.value)} />
+        )}
+
+        <Textarea
+          label="Descrição"
+          name="description"
+          placeholder={DESCRIPTION_PLACEHOLDERS[propertyType]}
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+        />
       </section>
 
       {property?.id && (
@@ -253,26 +371,23 @@ export function PropertyForm({ property, onSubmit, onCancel, onPropertyChange, l
         </section>
       )}
 
-      {property?.id && onPropertyChange && (
-        <PropertyImages property={property} onChange={handleImagesChange} />
-      )}
-
-      {!property?.id && (
-        <p className="rounded-lg bg-blue-50 px-3 py-2 text-xs text-blue-700">
-          Salve o imóvel primeiro para adicionar fotos.
-        </p>
-      )}
+      <PropertyImages
+        property={property}
+        pendingFiles={pendingPhotos}
+        onPendingChange={setPendingPhotos}
+        onChange={property?.id ? handleImagesChange : undefined}
+      />
 
       <div className="flex justify-end gap-2 border-t border-slate-100 pt-4">
-        <button type="button" onClick={onCancel} disabled={loading} className="rounded-lg px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100">
+        <button type="button" onClick={onCancel} disabled={isSaving} className="rounded-lg px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100">
           Cancelar
         </button>
         <button
           type="submit"
-          disabled={loading || !canSubmitAsAdmin || !canSubmitAsAgent}
+          disabled={isSaving || !canSubmitAsAdmin || !canSubmitAsAgent}
           className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
         >
-          {loading ? 'Salvando…' : property ? 'Salvar alterações' : 'Criar imóvel'}
+          {isSaving ? 'Salvando…' : property ? 'Salvar alterações' : 'Criar imóvel'}
         </button>
       </div>
     </form>

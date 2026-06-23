@@ -40,6 +40,8 @@ def list_properties(
     page: int = Query(default=1, ge=1),
     limit: int = Query(default=20, ge=1, le=100),
     listing_type: str | None = Query(default=None, pattern="^(sale|rent)$"),
+    property_type: str | None = Query(default=None, pattern="^(house|apartment|land)$"),
+    category: str | None = Query(default=None, pattern="^(land|residential)$"),
     min_price: Decimal | None = Query(default=None, ge=0),
     max_price: Decimal | None = Query(default=None, ge=0),
     location: str | None = Query(default=None, max_length=120),
@@ -51,6 +53,8 @@ def list_properties(
 ):
     filters = PropertySearchFilters(
         listing_type=listing_type,
+        property_type=property_type,
+        category=category,
         min_price=min_price,
         max_price=max_price,
         location=location,

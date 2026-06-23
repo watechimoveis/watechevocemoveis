@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { SearchState } from '../../hooks/usePropertySearch'
-import type { ListingType } from '../../types/property'
+import type { ListingType, PropertyCategory } from '../../types/property'
 import { formatPriceDigits, parsePriceDigits } from '../../utils/priceInput'
 
 export type SearchTab = 'terrenos' | 'imoveis' | 'alugueis'
@@ -12,10 +12,10 @@ interface HeroSearchProps {
   loading?: boolean
 }
 
-const TABS: { id: SearchTab; label: string; listingType: ListingType }[] = [
-  { id: 'terrenos', label: 'Terrenos', listingType: 'sale' },
-  { id: 'imoveis', label: 'Imóveis', listingType: 'sale' },
-  { id: 'alugueis', label: 'Aluguéis', listingType: 'rent' },
+const TABS: { id: SearchTab; label: string; listingType: ListingType; category: PropertyCategory | '' }[] = [
+  { id: 'terrenos', label: 'Terrenos', listingType: 'sale', category: 'land' },
+  { id: 'imoveis', label: 'Imóveis', listingType: 'sale', category: 'residential' },
+  { id: 'alugueis', label: 'Aluguéis', listingType: 'rent', category: '' },
 ]
 
 const PURPOSE_OPTIONS = [
@@ -26,15 +26,23 @@ const PURPOSE_OPTIONS = [
 ]
 
 export function HeroSearch({ draft, onChange, onSearch, loading }: HeroSearchProps) {
-  const [tab, setTab] = useState<SearchTab>(
-    draft.listingType === 'rent' ? 'alugueis' : 'terrenos',
-  )
+  const [tab, setTab] = useState<SearchTab>(() => {
+    if (draft.listingType === 'rent') return 'alugueis'
+    if (draft.category === 'residential') return 'imoveis'
+    return 'terrenos'
+  })
   const [advancedOpen, setAdvancedOpen] = useState(false)
   const [purpose, setPurpose] = useState('')
 
   useEffect(() => {
-    setTab(draft.listingType === 'rent' ? 'alugueis' : 'terrenos')
-  }, [draft.listingType])
+    if (draft.listingType === 'rent') {
+      setTab('alugueis')
+    } else if (draft.category === 'residential') {
+      setTab('imoveis')
+    } else {
+      setTab('terrenos')
+    }
+  }, [draft.listingType, draft.category])
 
   function setField<K extends keyof SearchState>(key: K, value: SearchState[K]) {
     onChange({ ...draft, [key]: value })
@@ -42,10 +50,11 @@ export function HeroSearch({ draft, onChange, onSearch, loading }: HeroSearchPro
 
   function selectTab(next: SearchTab) {
     setTab(next)
-    const listingType = TABS.find((t) => t.id === next)!.listingType
+    const tabConfig = TABS.find((t) => t.id === next)!
     const nextDraft: SearchState = {
       ...draft,
-      listingType,
+      listingType: tabConfig.listingType,
+      category: tabConfig.category,
       minRooms: next === 'terrenos' ? '' : draft.minRooms,
     }
     onChange(nextDraft)

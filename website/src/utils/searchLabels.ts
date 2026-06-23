@@ -41,6 +41,7 @@ export function buildActiveFilters(state: SearchState): ActiveFilter[] {
 export function defaultSearchState(): SearchState {
   return {
     listingType: 'sale',
+    category: 'land',
     location: '',
     minPrice: '',
     maxPrice: '',

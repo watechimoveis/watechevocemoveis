@@ -8,7 +8,7 @@ import { usePropertySeo } from '../hooks/usePageTitle'
 import { recordPropertyEvent } from '../services/analyticsService'
 import { getProperty } from '../services/propertiesService'
 import type { Property } from '../types/property'
-import { LISTING_LABELS } from '../types/property'
+import { LISTING_LABELS, PROPERTY_TYPE_LABELS } from '../types/property'
 import { formatSocialProof } from '../utils/analytics'
 import { getAgentFirstName } from '../utils/agent'
 import { buildWhatsAppUrl, formatPrice, propertyWhatsAppMessage } from '../utils/format'
@@ -92,12 +92,17 @@ export function PropertyDetailPage() {
 
   const socialProof = formatSocialProof(property.stats?.views_7d ?? 0)
 
-  const specs = [
-    { label: 'Quartos', value: property.rooms },
-    { label: 'Banheiros', value: property.bathrooms },
-    { label: 'Vagas', value: property.parking },
-    { label: 'Área', value: property.size != null ? `${property.size} m²` : null },
-  ].filter((s) => s.value != null)
+  const isLand = property.property_type === 'land'
+  const specs: { label: string; value: string | number }[] = []
+  if (!isLand && property.rooms != null) specs.push({ label: 'Quartos', value: property.rooms })
+  if (!isLand && property.bathrooms != null) specs.push({ label: 'Banheiros', value: property.bathrooms })
+  if (!isLand && property.parking != null) specs.push({ label: 'Vagas', value: property.parking })
+  if (property.size != null) {
+    specs.push({
+      label: isLand ? 'Área do terreno' : 'Área',
+      value: `${property.size} m²`,
+    })
+  }
 
   return (
     <>
@@ -117,6 +122,9 @@ export function PropertyDetailPage() {
           <div className="lg:col-span-2">
             <div className="flex flex-wrap items-center gap-2">
               <span className="inline-block rounded-md bg-blue-100 px-2.5 py-1 text-xs font-bold uppercase tracking-wide text-blue-800">
+                {PROPERTY_TYPE_LABELS[property.property_type]}
+              </span>
+              <span className="inline-block rounded-md bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700">
                 {LISTING_LABELS[property.listing_type]}
               </span>
               {socialProof && (

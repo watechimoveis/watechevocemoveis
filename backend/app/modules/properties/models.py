@@ -14,6 +14,7 @@ class Property(Base):
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     title: Mapped[str | None] = mapped_column(String(255), nullable=True)
     listing_type: Mapped[str] = mapped_column(String(10), nullable=False, default="sale")
+    property_type: Mapped[str] = mapped_column(String(20), nullable=False, default="land")
     location: Mapped[str | None] = mapped_column(String(500), nullable=True)
     price: Mapped[float | None] = mapped_column(Numeric(19, 4), nullable=True)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -49,6 +50,8 @@ class Property(Base):
         Index("ix_properties_agent_user_id", "agent_user_id"),
         Index("ix_properties_listing_type", "listing_type"),
         Index("ix_properties_listing_price", "listing_type", "price"),
+        Index("ix_properties_property_type", "property_type"),
+        Index("ix_properties_listing_property_type", "listing_type", "property_type"),
     )
 
 

@@ -1,3 +1,18 @@
+export type ListingType = 'sale' | 'rent'
+export type PropertyType = 'house' | 'apartment' | 'land'
+export type PropertyCategory = 'land' | 'residential'
+
+export const PROPERTY_TYPE_LABELS: Record<PropertyType, string> = {
+  house: 'Casa',
+  apartment: 'Apartamento',
+  land: 'Terreno',
+}
+
+export const LISTING_LABELS: Record<ListingType, string> = {
+  sale: 'Compra',
+  rent: 'Aluguel',
+}
+
 export interface PropertyImage {
   id: string
   url: string
@@ -26,6 +41,7 @@ export interface Property {
   agent_whatsapp: string | null
   agent_user_id: string | null
   listing_type: 'sale' | 'rent'
+  property_type: PropertyType
   created_at: string
   updated_at: string
   images: PropertyImage[]
@@ -44,6 +60,7 @@ export type PropertyPayload = Partial<
   Omit<Property, 'id' | 'created_at' | 'updated_at' | 'images' | 'agent_name' | 'agent_creci' | 'agent_whatsapp'>
 > & {
   listing_type?: 'sale' | 'rent'
+  property_type?: PropertyType
   agent_user_id?: string
 }
 
