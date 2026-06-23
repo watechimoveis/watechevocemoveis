@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { mediaUrl } from '../../lib/api'
 import { deletePropertyImage, uploadPropertyImages } from '../../services/propertiesService'
+import { getApiHealth, isPhotoStorageReady, type ApiHealth } from '../../services/healthService'
 import type { Property, PropertyImage } from '../../types/property'
 import { HttpError } from '../../services/api'
+import { StorageNotice } from '../ui/StorageNotice'
 
 const MAX_PHOTOS = 15
 const MAX_BYTES = 5 * 1024 * 1024
@@ -24,6 +26,7 @@ export function PropertyImages({
   const inputRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
+  const [storageBlocked, setStorageBlocked] = useState(false)
   const [dragOver, setDragOver] = useState(false)
   const [previews, setPreviews] = useState<string[]>([])
 
@@ -31,6 +34,21 @@ export function PropertyImages({
   const isDraft = !property?.id
   const totalCount = savedImages.length + pendingFiles.length
   const atLimit = totalCount >= MAX_PHOTOS
+  const uploadsDisabled = storageBlocked || uploading
+
+  useEffect(() => {
+    let cancelled = false
+    getApiHealth()
+      .then((health: ApiHealth) => {
+        if (!cancelled) setStorageBlocked(!isPhotoStorageReady(health))
+      })
+      .catch(() => {
+        /* health opcional — upload ainda pode funcionar em dev local */
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   useEffect(() => {
     if (!isDraft || pendingFiles.length === 0) {
@@ -93,7 +111,12 @@ export function PropertyImages({
       const uploaded = await uploadPropertyImages(property.id, valid)
       onChange([...savedImages, ...uploaded])
     } catch (err) {
-      setError(err instanceof HttpError ? err.message : 'Erro ao enviar fotos.')
+      if (err instanceof HttpError && err.code === 'STORAGE_NOT_CONFIGURED') {
+        setStorageBlocked(true)
+        setError('')
+      } else {
+        setError(err instanceof HttpError ? err.message : 'Erro ao enviar fotos.')
+      }
     } finally {
       setUploading(false)
     }
@@ -108,7 +131,7 @@ export function PropertyImages({
   function handleDrop(e: React.DragEvent) {
     e.preventDefault()
     setDragOver(false)
-    if (atLimit || uploading) return
+    if (atLimit || uploadsDisabled) return
     const files = Array.from(e.dataTransfer.files).filter((f) => f.type.startsWith('image/'))
     void addFiles(files)
   }
@@ -143,7 +166,7 @@ export function PropertyImages({
         {!atLimit && (
           <button
             type="button"
-            disabled={uploading}
+            disabled={uploadsDisabled}
             onClick={() => inputRef.current?.click()}
             className="shrink-0 rounded-lg bg-slate-100 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-200 disabled:opacity-50"
           >
@@ -166,12 +189,14 @@ export function PropertyImages({
         </p>
       )}
 
-      {error && <p className="text-xs text-red-600">{error}</p>}
+      {storageBlocked && <StorageNotice />}
+
+      {error && !storageBlocked && <p className="text-xs text-red-600">{error}</p>}
 
       {!hasPhotos ? (
         <button
           type="button"
-          disabled={uploading || atLimit}
+          disabled={uploadsDisabled || atLimit}
           onClick={() => inputRef.current?.click()}
           onDragOver={(e) => {
             e.preventDefault()
@@ -223,7 +248,7 @@ export function PropertyImages({
           {!atLimit && (
             <button
               type="button"
-              disabled={uploading}
+              disabled={uploadsDisabled}
               onClick={() => inputRef.current?.click()}
               className="mt-2 w-full rounded-lg border border-dashed border-slate-200 py-2 text-xs font-medium text-slate-500 hover:border-blue-300 hover:text-blue-700"
             >

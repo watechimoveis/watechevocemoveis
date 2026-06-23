@@ -16,7 +16,7 @@ interface HomeHeroProps {
 const TRUST_ITEMS = [
   { icon: ShieldIcon, label: 'Negociação segura' },
   { icon: PinIcon, label: 'Localizações estratégicas' },
-  { icon: DocIcon, label: 'Documentação verificada' },
+  { icon: DocIcon, label: 'CRECI e contato verificado' },
 ]
 
 export function HomeHero({ applied, draft, onChange, onSearch, loading, total }: HomeHeroProps) {
@@ -75,16 +75,6 @@ export function HomeHero({ applied, draft, onChange, onSearch, loading, total }:
           <StatItem icon={ShieldIcon} value="SysEstate" label="Gestão integrada" />
         </div>
       </div>
-
-      <aside className="absolute bottom-32 right-4 hidden max-w-[220px] rounded-2xl border border-white/10 bg-slate-950/75 p-4 backdrop-blur-md xl:block">
-        <div className="mb-2 flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-500/20 text-emerald-400">
-          <TreeIcon />
-        </div>
-        <p className="text-sm font-semibold text-white">Invista com segurança</p>
-        <p className="mt-1 text-xs leading-relaxed text-white/60">
-          Anúncios com corretor responsável, CRECI e contato verificado.
-        </p>
-      </aside>
     </section>
   )
 }
@@ -147,14 +137,6 @@ function UsersIcon() {
   return (
     <svg viewBox="0 0 20 20" className="h-4 w-4" fill="currentColor">
       <path d="M7 8a3 3 0 100-6 3 3 0 000 6zM14.5 8a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM1.615 16.428a1.224 1.224 0 01-.569-1.175 6.002 6.002 0 0111.908 0 1.224 1.224 0 01-.569 1.175 4.002 4.002 0 01-7.77 0zM16.5 12.75a4.5 4.5 0 10-1.5 8.602" />
-    </svg>
-  )
-}
-
-function TreeIcon() {
-  return (
-    <svg viewBox="0 0 20 20" className="h-5 w-5" fill="currentColor">
-      <path d="M10 2L6 8h2v2H5l5 8 5-8h-3V8h2L10 2z" />
     </svg>
   )
 }
