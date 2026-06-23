@@ -1,7 +1,7 @@
 from decimal import Decimal
 from uuid import UUID
 
-from sqlalchemy import func, select
+from sqlalchemy import func, select, update
 from sqlalchemy.orm import Session, selectinload
 
 from app.modules.properties.filters import PropertySearchFilters
@@ -157,3 +157,12 @@ class PropertyRepository:
         if agent_user_id:
             stmt = stmt.where(Property.agent_user_id == agent_user_id)
         return list(self.db.scalars(stmt).all())
+
+    def sync_agent_whatsapp(self, agent_user_id: UUID, whatsapp: str | None) -> None:
+        stmt = (
+            update(Property)
+            .where(Property.agent_user_id == agent_user_id)
+            .values(agent_whatsapp=whatsapp)
+        )
+        self.db.execute(stmt)
+        self.db.commit()

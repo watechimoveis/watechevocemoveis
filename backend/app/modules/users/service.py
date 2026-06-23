@@ -4,8 +4,8 @@ from sqlalchemy.orm import Session
 
 from app.modules.users.models import User, UserRole
 from app.modules.users.repository import UserRepository
-from app.modules.users.schemas import AgentCreate, AgentUpdate, UserResponse
-from app.shared.auth.security import hash_password
+from app.modules.users.schemas import AgentCreate, AgentUpdate, UserResponse, WhatsAppUpdate
+from app.shared.auth.security import CurrentUser, hash_password
 from app.shared.errors.handlers import AppError
 
 
@@ -68,6 +68,40 @@ class UserService:
             data["password_hash"] = hash_password(payload.password)
 
         updated = self.repository.update(user, data)
+
+        if payload.whatsapp is not None:
+            from app.modules.properties.repository import PropertyRepository
+
+            PropertyRepository(self.repository.db).sync_agent_whatsapp(user.id, data.get("whatsapp"))
+
+        return user_to_response(updated)
+
+    def update_my_whatsapp(self, user: CurrentUser, payload: WhatsAppUpdate) -> UserResponse:
+        if not user.is_agent:
+            raise AppError(
+                code="FORBIDDEN",
+                message="Apenas corretores podem alterar o WhatsApp pelo painel",
+                status_code=403,
+            )
+
+        db_user = self.repository.get_by_id(user.id)
+        if not db_user:
+            raise AppError(code="NOT_FOUND", message="Usuário não encontrado", status_code=404)
+
+        digits = _digits(payload.whatsapp)
+        if not digits or len(digits) < 10:
+            raise AppError(
+                code="INVALID_WHATSAPP",
+                message="Informe um WhatsApp válido com DDD (ex: 22999999999)",
+                status_code=400,
+            )
+
+        updated = self.repository.update(db_user, {"whatsapp": digits})
+
+        from app.modules.properties.repository import PropertyRepository
+
+        PropertyRepository(self.repository.db).sync_agent_whatsapp(user.id, digits)
+
         return user_to_response(updated)
 
 

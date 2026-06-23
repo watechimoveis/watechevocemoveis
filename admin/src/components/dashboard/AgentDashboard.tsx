@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { AgentWhatsAppEditor } from './AgentWhatsAppEditor'
 import { PerformanceOverview } from '../analytics/PerformanceOverview'
 import { mediaUrl } from '../../lib/api'
 import { useAuth } from '../../hooks/useAuth'
@@ -9,12 +10,12 @@ import type { AnalyticsOverview } from '../../types/analytics'
 import type { Property } from '../../types/property'
 import { LISTING_LABELS, PROPERTY_TYPE_LABELS } from '../../types/property'
 import { whatsappConversionRate } from '../../utils/analytics'
-import { formatWhatsAppPhone, getAgentInitials } from '../../utils/agent'
+import { getAgentInitials } from '../../utils/agent'
 import { formatPrice } from '../../utils/format'
 import { Button } from '../ui/Button'
 
 export function AgentDashboard() {
-  const { user } = useAuth()
+  const { user, updateUser } = useAuth()
   const navigate = useNavigate()
   const [properties, setProperties] = useState<Property[]>([])
   const [total, setTotal] = useState(0)
@@ -49,7 +50,7 @@ export function AgentDashboard() {
               <p className="type-page-lead text-emerald-700">Olá, {user?.name?.split(' ')[0]}</p>
               <h1 className="type-page-title font-semibold text-slate-900">Publique seu anúncio</h1>
               <p className="type-page-lead text-slate-500">
-                Seus dados (CRECI e WhatsApp) são vinculados automaticamente
+                Seu CRECI é vinculado automaticamente; você pode atualizar o WhatsApp quando precisar
               </p>
             </div>
           </div>
@@ -68,10 +69,7 @@ export function AgentDashboard() {
               <dt className="text-slate-500">CRECI</dt>
               <dd className="font-medium text-slate-800">{user.creci || '—'}</dd>
             </div>
-            <div>
-              <dt className="text-slate-500">WhatsApp</dt>
-              <dd className="font-medium text-slate-800">{formatWhatsAppPhone(user.whatsapp)}</dd>
-            </div>
+            <AgentWhatsAppEditor user={user} onUpdated={updateUser} />
             <div>
               <dt className="text-slate-500">Meus anúncios</dt>
               <dd className="font-medium text-slate-800">{loading ? '…' : total}</dd>

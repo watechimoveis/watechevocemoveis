@@ -30,3 +30,7 @@ class AgentUpdate(BaseModel):
     creci: str | None = None
     whatsapp: str | None = None
     is_active: bool | None = None
+
+
+class WhatsAppUpdate(BaseModel):
+    whatsapp: str = Field(min_length=8, max_length=30)

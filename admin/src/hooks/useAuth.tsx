@@ -11,6 +11,7 @@ interface AuthContextValue {
   isAgent: boolean
   login: (email: string, password: string) => Promise<void>
   establishSession: (token: string, sessionUser: User) => void
+  updateUser: (sessionUser: User) => void
   logout: () => void
 }
 
@@ -23,6 +24,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const establishSession = useCallback((token: string, sessionUser: User) => {
     setAuth(token, sessionUser)
+    setUser(sessionUser)
+  }, [])
+
+  const updateUser = useCallback((sessionUser: User) => {
+    const token = getAccessToken()
+    if (token) setAuth(token, sessionUser)
     setUser(sessionUser)
   }, [])
 
@@ -61,9 +68,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isAgent: user?.role === 'agent',
       login,
       establishSession,
+      updateUser,
       logout,
     }),
-    [user, isAuthenticated, login, establishSession, logout],
+    [user, isAuthenticated, login, establishSession, updateUser, logout],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

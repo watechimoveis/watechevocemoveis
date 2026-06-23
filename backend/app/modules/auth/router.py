@@ -4,7 +4,8 @@ from sqlalchemy.orm import Session
 from app.modules.auth.schemas import LoginRequest, LoginResponse
 from app.modules.auth.service import AuthService
 from app.modules.users.repository import UserRepository
-from app.modules.users.schemas import UserResponse
+from app.modules.users.schemas import UserResponse, WhatsAppUpdate
+from app.modules.users.service import UserService
 from app.shared.auth.dependencies import get_current_user
 from app.shared.auth.security import CurrentUser
 from app.shared.database.session import get_db
@@ -24,3 +25,12 @@ def me(user: CurrentUser = Depends(get_current_user), db: Session = Depends(get_
 
     db_user = UserRepository(db).get_by_id(user.id)
     return user_to_response(db_user)
+
+
+@router.patch("/me/whatsapp", response_model=UserResponse)
+def update_my_whatsapp(
+    payload: WhatsAppUpdate,
+    user: CurrentUser = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    return UserService(db).update_my_whatsapp(user, payload)

@@ -384,7 +384,7 @@ export function PropertyForm({ property, defaultPropertyType, onSubmit, onCancel
             <div className="flex-1">
               <p className="text-sm font-semibold text-emerald-900">Seu perfil será vinculado a este imóvel</p>
               <p className="mt-1 text-xs text-emerald-800/80">
-                Nome, CRECI e WhatsApp vêm do seu cadastro — não é possível alterar manualmente, evitando fraude.
+                Nome e CRECI vêm do seu cadastro. O WhatsApp pode ser alterado no painel inicial.
               </p>
               <dl className="mt-3 grid gap-1 text-sm text-emerald-950">
                 <div className="flex gap-2">

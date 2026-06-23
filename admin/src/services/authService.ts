@@ -17,3 +17,10 @@ export async function login(email: string, password: string): Promise<LoginRespo
 export async function fetchMe() {
   return apiRequest<LoginResponse['user']>('/auth/me')
 }
+
+export async function updateMyWhatsApp(whatsapp: string) {
+  return apiRequest<LoginResponse['user']>('/auth/me/whatsapp', {
+    method: 'PATCH',
+    body: JSON.stringify({ whatsapp }),
+  })
+}
