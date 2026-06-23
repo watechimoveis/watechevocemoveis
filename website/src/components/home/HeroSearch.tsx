@@ -18,13 +18,6 @@ const TABS: { id: SearchTab; label: string; listingType: ListingType; category: 
   { id: 'alugueis', label: 'Aluguéis', listingType: 'rent', category: '' },
 ]
 
-const PURPOSE_OPTIONS = [
-  { value: '', label: 'Qualquer finalidade' },
-  { value: 'investimento', label: 'Investimento' },
-  { value: 'construcao', label: 'Construção' },
-  { value: 'comercio', label: 'Comércio' },
-]
-
 export function HeroSearch({ draft, onChange, onSearch, loading }: HeroSearchProps) {
   const [tab, setTab] = useState<SearchTab>(() => {
     if (draft.listingType === 'rent') return 'alugueis'
@@ -32,7 +25,6 @@ export function HeroSearch({ draft, onChange, onSearch, loading }: HeroSearchPro
     return 'terrenos'
   })
   const [advancedOpen, setAdvancedOpen] = useState(false)
-  const [purpose, setPurpose] = useState('')
 
   useEffect(() => {
     if (draft.listingType === 'rent') {
@@ -106,22 +98,6 @@ export function HeroSearch({ draft, onChange, onSearch, loading }: HeroSearchPro
             />
           </div>
         </Field>
-
-        {tab === 'terrenos' && (
-          <Field label="Finalidade">
-            <select
-              value={purpose}
-              onChange={(e) => setPurpose(e.target.value)}
-              className={inputClass}
-            >
-              {PURPOSE_OPTIONS.map((opt) => (
-                <option key={opt.value || 'any'} value={opt.value} className="bg-slate-900">
-                  {opt.label}
-                </option>
-              ))}
-            </select>
-          </Field>
-        )}
 
         <Field label="Área mínima (m²)">
           <input

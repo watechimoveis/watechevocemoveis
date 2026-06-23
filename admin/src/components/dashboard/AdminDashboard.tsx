@@ -44,7 +44,7 @@ export function AdminDashboard() {
       <div className="-mx-4 flex gap-3 overflow-x-auto scroll-snap-x px-4 pb-1 sm:mx-0 sm:grid sm:grid-cols-3 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-6">
         <StatCard label="Anúncios" value={loading ? '—' : totalProperties} className="scroll-snap-item min-w-[9rem] shrink-0 sm:min-w-0 sm:shrink" />
         <StatCard label="Corretores ativos" value={loading ? '—' : totalAgents} className="scroll-snap-item min-w-[9rem] shrink-0 sm:min-w-0 sm:shrink" />
-        <StatCard label="Compra" value={loading ? '—' : saleCount} className="scroll-snap-item min-w-[9rem] shrink-0 sm:min-w-0 sm:shrink" />
+        <StatCard label="Venda" value={loading ? '—' : saleCount} className="scroll-snap-item min-w-[9rem] shrink-0 sm:min-w-0 sm:shrink" />
         <StatCard label="Aluguel" value={loading ? '—' : rentCount} className="scroll-snap-item min-w-[9rem] shrink-0 sm:min-w-0 sm:shrink" />
         <StatCard label="Views (7d)" value={loading ? '—' : totalViews7d} className="scroll-snap-item min-w-[9rem] shrink-0 sm:min-w-0 sm:shrink" />
         <StatCard label="WhatsApp (7d)" value={loading ? '—' : totalWhatsApp7d} highlight className="scroll-snap-item min-w-[9rem] shrink-0 sm:min-w-0 sm:shrink" />

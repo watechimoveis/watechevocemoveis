@@ -33,21 +33,12 @@ export function HomeHeader() {
           ))}
         </nav>
 
-        <div className="hidden items-center gap-3 lg:flex">
-          <Link
-            to="/admin"
-            className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-white/90 transition hover:text-amber-400"
-          >
-            <UserIcon />
-            Entrar
-          </Link>
-          <Link
-            to="/admin"
-            className="rounded-lg bg-amber-500 px-5 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-amber-400 active:scale-[0.98]"
-          >
-            Corretor
-          </Link>
-        </div>
+        <Link
+          to="/admin"
+          className="hidden rounded-lg bg-amber-500 px-5 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-amber-400 active:scale-[0.98] lg:inline-flex"
+        >
+          Área do corretor
+        </Link>
 
         <button
           type="button"
@@ -93,14 +84,6 @@ function BuildingIcon() {
         <path d="M4 21V9l8-4 8 4v12h-6v-7H10v7H4z" />
       </svg>
     </span>
-  )
-}
-
-function UserIcon() {
-  return (
-    <svg viewBox="0 0 20 20" className="h-4 w-4" fill="currentColor" aria-hidden="true">
-      <path d="M10 8a3 3 0 100-6 3 3 0 000 6zM3.465 14.493a1.23 1.23 0 00.41 1.412A9.957 9.957 0 0010 18c2.31 0 4.438-.784 6.131-2.1.43-.333.533-.953.41-1.412A6.972 6.972 0 0010 11.75a6.972 6.972 0 00-6.535 2.743z" />
-    </svg>
   )
 }
 

@@ -1,15 +1,17 @@
 import { useCallback, useRef, useState } from 'react'
 import { mediaUrl } from '../../lib/api'
-import type { PropertyImage } from '../../types/property'
+import type { PropertyImage, PropertyType } from '../../types/property'
+import { PropertyCoverImage } from './PropertyCoverImage'
 
 interface PropertyGalleryProps {
   images: PropertyImage[]
   title?: string | null
+  propertyType?: PropertyType | null
 }
 
 const SWIPE_THRESHOLD = 48
 
-export function PropertyGallery({ images, title }: PropertyGalleryProps) {
+export function PropertyGallery({ images, title, propertyType }: PropertyGalleryProps) {
   const [activeIndex, setActiveIndex] = useState(0)
   const touchStart = useRef<{ x: number; y: number } | null>(null)
   const alt = title || 'Imóvel'
@@ -60,11 +62,14 @@ export function PropertyGallery({ images, title }: PropertyGalleryProps) {
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
-        <img
+        <PropertyCoverImage
           src={mediaUrl(active.url)}
           alt={alt}
-          className="aspect-[4/3] w-full object-cover transition-opacity duration-200 sm:aspect-[16/9]"
+          propertyType={propertyType}
+          aspect="gallery"
+          loading="eager"
           draggable={false}
+          className="transition-opacity duration-200"
         />
 
         {images.length > 1 && (

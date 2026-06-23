@@ -9,7 +9,7 @@ export const PROPERTY_TYPE_LABELS: Record<PropertyType, string> = {
 }
 
 export const LISTING_LABELS: Record<ListingType, string> = {
-  sale: 'Compra',
+  sale: 'Venda',
   rent: 'Aluguel',
 }
 

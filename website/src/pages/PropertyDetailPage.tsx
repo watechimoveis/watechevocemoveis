@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { AgentContactCard } from '../components/properties/AgentContactCard'
 import { PropertyGallery } from '../components/properties/PropertyGallery'
+import { SharePropertyButton } from '../components/properties/SharePropertyButton'
 import { SimilarProperties } from '../components/properties/SimilarProperties'
 import { WhatsAppButton } from '../components/ui/WhatsAppButton'
 import { usePropertySeo } from '../hooks/usePageTitle'
@@ -95,6 +96,7 @@ export function PropertyDetailPage() {
 
   const isLand = normalizePropertyType(property.property_type) === 'land'
   const sqmPrice = isLand ? formatPricePerSqm(property.price, property.size) : null
+  const shareUrl = `${window.location.origin}/imovel/${property.id}`
   const specs: { label: string; value: string | number }[] = []
   if (!isLand && property.rooms != null) specs.push({ label: 'Quartos', value: property.rooms })
   if (!isLand && property.bathrooms != null) specs.push({ label: 'Banheiros', value: property.bathrooms })
@@ -117,7 +119,7 @@ export function PropertyDetailPage() {
         </Link>
 
         <div className="mt-6">
-          <PropertyGallery images={property.images} title={property.title} />
+          <PropertyGallery images={property.images} title={property.title} propertyType={property.property_type} />
         </div>
 
         <div className="mt-8 lg:grid lg:grid-cols-3 lg:gap-8">
@@ -147,7 +149,7 @@ export function PropertyDetailPage() {
             </h1>
             {property.location && (
               <p className="mt-2 flex items-center gap-1.5 text-slate-500">
-                <svg viewBox="0 0 20 20" className="h-5 w-5" fill="currentColor" aria-hidden="true">
+                <svg viewBox="0 0 20 20" className="h-5 w-5 shrink-0" fill="currentColor" aria-hidden="true">
                   <path
                     fillRule="evenodd"
                     d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
@@ -157,6 +159,10 @@ export function PropertyDetailPage() {
                 {property.location}
               </p>
             )}
+
+            <div className="mt-4">
+              <SharePropertyButton title={property.title || 'Imóvel disponível'} url={shareUrl} />
+            </div>
 
             {specs.length > 0 && (
               <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-4">

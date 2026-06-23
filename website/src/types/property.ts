@@ -64,7 +64,7 @@ export function getCoverImage(property: Property): string | null {
 }
 
 export const LISTING_LABELS: Record<ListingType, string> = {
-  sale: 'Compra',
+  sale: 'À venda',
   rent: 'Aluguel',
 }
 

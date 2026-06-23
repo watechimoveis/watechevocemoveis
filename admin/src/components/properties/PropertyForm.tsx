@@ -14,6 +14,7 @@ import { PropertyImages } from './PropertyImages'
 
 interface PropertyFormProps {
   property?: Property | null
+  defaultPropertyType?: PropertyType
   onSubmit: (payload: PropertyPayload) => Promise<Property | void>
   onCancel: () => void
   onPropertyChange?: (property: Property) => void
@@ -63,6 +64,11 @@ function parseIntField(value: string): number | undefined {
   if (!trimmed) return undefined
   const num = parseInt(trimmed, 10)
   return Number.isNaN(num) ? undefined : num
+}
+
+function formatPricePerSqm(price: number, size: number): string | null {
+  if (size <= 0) return null
+  return `${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(price / size)}/m²`
 }
 
 function SegmentedControl<T extends string>({
@@ -202,7 +208,7 @@ function CreatedBanner({ propertyId, photoCount }: { propertyId: string; photoCo
   )
 }
 
-export function PropertyForm({ property, onSubmit, onCancel, onPropertyChange, onSuccess, loading }: PropertyFormProps) {
+export function PropertyForm({ property, defaultPropertyType, onSubmit, onCancel, onPropertyChange, onSuccess, loading }: PropertyFormProps) {
   const { user, isAdmin, isAgent } = useAuth()
   const [agents, setAgents] = useState<User[]>([])
   const [title, setTitle] = useState('')
@@ -249,7 +255,7 @@ export function PropertyForm({ property, onSubmit, onCancel, onPropertyChange, o
     setBathrooms(toFormValue(property?.bathrooms))
     setParking(toFormValue(property?.parking))
     setSize(toFormValue(property?.size))
-    setPropertyType(property?.property_type || 'land')
+    setPropertyType(property?.property_type || defaultPropertyType || 'land')
     setListingType(property?.listing_type || 'sale')
     setAgentUserId(property?.agent_user_id || '')
     setPendingPhotos([])
@@ -257,7 +263,7 @@ export function PropertyForm({ property, onSubmit, onCancel, onPropertyChange, o
     setJustCreated(false)
     setPhotoError('')
     setPublishedPhotos(0)
-  }, [property])
+  }, [property, defaultPropertyType])
 
   function handlePropertyTypeChange(next: PropertyType) {
     setPropertyType(next)
@@ -273,6 +279,8 @@ export function PropertyForm({ property, onSubmit, onCancel, onPropertyChange, o
     if (description.includes(tag)) return
     setDescription(description.trim() ? `${description.trim()}\n${bullet}` : bullet)
   }
+
+  const titleSuggestion = suggestTitle(propertyType, listingType, location, size, rooms)
 
   function validate(): Record<string, string> {
     const errors: Record<string, string> = {}
@@ -290,8 +298,6 @@ export function PropertyForm({ property, onSubmit, onCancel, onPropertyChange, o
     if (!first) return
     document.getElementById(`field-${first}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
   }
-
-  const titleSuggestion = suggestTitle(propertyType, listingType, location, size, rooms)
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
@@ -362,6 +368,9 @@ export function PropertyForm({ property, onSubmit, onCancel, onPropertyChange, o
     LISTING_LABELS[listingType],
     location.trim() || null,
     price.trim() ? formatPriceDigits(price) : null,
+    isLand && size.trim() && price.trim()
+      ? formatPricePerSqm(parseNumber(price)!, parseNumber(size)!)
+      : null,
   ].filter(Boolean)
 
   return (

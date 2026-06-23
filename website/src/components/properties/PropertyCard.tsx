@@ -4,6 +4,7 @@ import { recordPropertyEvent } from '../../services/analyticsService'
 import type { Property } from '../../types/property'
 import { getCoverImage, LISTING_LABELS } from '../../types/property'
 import { formatPricePerSqm, normalizePropertyType, propertyHighlights, propertyTypeLabel } from '../../utils/propertyDisplay'
+import { PropertyCoverImage } from './PropertyCoverImage'
 import { getAgentFirstName } from '../../utils/agent'
 import { buildWhatsAppUrl, formatPrice, propertyWhatsAppMessage } from '../../utils/format'
 import { WhatsAppButton } from '../ui/WhatsAppButton'
@@ -27,22 +28,20 @@ export function PropertyCard({ property }: PropertyCardProps) {
   return (
     <article className="flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:shadow-md">
       <Link to={`/imovel/${property.id}`} className="relative block">
-        <div className="aspect-[4/3] bg-slate-100">
-          {coverSrc ? (
-            <img
-              src={coverSrc}
-              alt={property.title || 'Imóvel'}
-              className="h-full w-full object-cover"
-              loading="lazy"
-            />
-          ) : (
-            <div className="flex h-full items-center justify-center text-slate-300">
-              <svg viewBox="0 0 24 24" className="h-12 w-12" fill="none" stroke="currentColor" strokeWidth="1">
-                <path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </div>
-          )}
-        </div>
+        {coverSrc ? (
+          <PropertyCoverImage
+            src={coverSrc}
+            alt={property.title || 'Imóvel'}
+            propertyType={type}
+            aspect="card"
+          />
+        ) : (
+          <div className="flex aspect-[4/3] items-center justify-center bg-slate-100 text-slate-300">
+            <svg viewBox="0 0 24 24" className="h-12 w-12" fill="none" stroke="currentColor" strokeWidth="1">
+              <path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </div>
+        )}
         <div className="absolute left-2 top-2 flex flex-wrap gap-1">
           <span className="rounded-md bg-blue-600 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-white">
             {propertyTypeLabel(type)}

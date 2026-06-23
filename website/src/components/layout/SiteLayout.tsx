@@ -17,7 +17,7 @@ export function SiteLayout() {
             className="shrink-0 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 active:scale-95 sm:px-4 sm:text-sm"
           >
             <span className="sm:hidden">Corretor</span>
-            <span className="hidden sm:inline">Login corretor</span>
+            <span className="hidden sm:inline">Área do corretor</span>
           </Link>
         </div>
       </header>

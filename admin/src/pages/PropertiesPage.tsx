@@ -11,7 +11,7 @@ import {
   listProperties,
   updateProperty,
 } from '../services/propertiesService'
-import type { Property, PropertyPayload, PropertyStats } from '../types/property'
+import type { Property, PropertyPayload, PropertyStats, PropertyType } from '../types/property'
 import { PROPERTY_TYPE_LABELS } from '../types/property'
 import { formatPrice } from '../utils/format'
 import { formatWhatsAppPhone, getAgentInitials } from '../utils/agent'
@@ -19,8 +19,7 @@ import { whatsappConversionRate } from '../utils/analytics'
 
 type ModalMode = 'create' | 'edit' | 'delete' | null
 
-const LISTING_LABEL: Record<string, string> = { sale: 'Compra', rent: 'Aluguel' }
-const TYPE_LABEL: Record<string, string> = { house: 'Casa', apartment: 'Apto', land: 'Terreno' }
+const LISTING_LABEL: Record<string, string> = { sale: 'Venda', rent: 'Aluguel' }
 
 export function PropertiesPage() {
   const { isAdmin } = useAuth()
@@ -35,6 +34,7 @@ export function PropertiesPage() {
   const [selected, setSelected] = useState<Property | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [toast, setToast] = useState('')
+  const [createPreset, setCreatePreset] = useState<PropertyType>('land')
 
   const load = useCallback(async (currentPage = page) => {
     setLoading(true)
@@ -93,7 +93,8 @@ export function PropertiesPage() {
     }
   }, [searchParams, setSearchParams, properties, loading])
 
-  function openCreate() {
+  function openCreate(preset: PropertyType = 'land') {
+    setCreatePreset(preset)
     setSelected(null)
     setModalMode('create')
   }
@@ -178,9 +179,17 @@ export function PropertiesPage() {
             {!isAdmin && ' · publicados no site com seu perfil'}
           </p>
         </div>
-        <Button onClick={openCreate}>
-          {isAdmin ? '+ Novo anúncio' : '+ Publicar anúncio'}
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          {(['land', 'house', 'apartment'] as PropertyType[]).map((type) => (
+            <Button
+              key={type}
+              variant={type === 'land' ? 'primary' : 'secondary'}
+              onClick={() => openCreate(type)}
+            >
+              + {PROPERTY_TYPE_LABELS[type]}
+            </Button>
+          ))}
+        </div>
       </div>
 
       {toast && (
@@ -210,7 +219,7 @@ export function PropertiesPage() {
             <p className="text-slate-500">
               {isAdmin ? 'Nenhum imóvel cadastrado.' : 'Você ainda não publicou nenhum anúncio.'}
             </p>
-            <Button className="mt-4" onClick={openCreate}>
+            <Button className="mt-4" onClick={() => openCreate()}>
               {isAdmin ? 'Cadastrar imóvel' : 'Publicar primeiro anúncio'}
             </Button>
           </div>
@@ -267,10 +276,13 @@ export function PropertiesPage() {
                         {property.title || <span className="italic text-slate-400">Sem título</span>}
                       </p>
                       <p className="text-xs text-slate-500">
-                        {TYPE_LABEL[property.property_type] || 'Imóvel'}
+                        {PROPERTY_TYPE_LABELS[property.property_type] || 'Imóvel'}
                         {' · '}
-                        {LISTING_LABEL[property.listing_type] || 'Compra'}
+                        {LISTING_LABEL[property.listing_type] || 'Venda'}
                         {property.location ? ` · ${property.location}` : ''}
+                        {!property.images?.length && (
+                          <span className="ml-1 font-medium text-amber-600">· Sem fotos</span>
+                        )}
                       </p>
                     </td>
                     <td className="px-4 py-3 font-medium text-slate-900">
@@ -357,12 +369,13 @@ export function PropertiesPage() {
         title={
           modalMode === 'edit' && selected
             ? `Editar · ${PROPERTY_TYPE_LABELS[selected.property_type] || 'Imóvel'}`
-            : 'Novo anúncio'
+            : `Novo · ${PROPERTY_TYPE_LABELS[createPreset]}`
         }
         wide
       >
         <PropertyForm
           property={selected}
+          defaultPropertyType={modalMode === 'create' ? createPreset : undefined}
           onSubmit={handleSave}
           onCancel={closeModal}
           onPropertyChange={setSelected}
@@ -449,10 +462,13 @@ function PropertyMobileCard({
             )}
           </p>
           <p className="mt-0.5 text-xs text-slate-500">
-            {TYPE_LABEL[property.property_type] || 'Imóvel'}
+            {PROPERTY_TYPE_LABELS[property.property_type] || 'Imóvel'}
             {' · '}
-            {LISTING_LABEL[property.listing_type] || 'Compra'}
+            {LISTING_LABEL[property.listing_type] || 'Venda'}
             {property.location ? ` · ${property.location}` : ''}
+            {!property.images?.length && (
+              <span className="font-medium text-amber-600"> · Sem fotos</span>
+            )}
           </p>
           <div className="mt-2">
             <PropertyPerformance stats={property.stats} />
