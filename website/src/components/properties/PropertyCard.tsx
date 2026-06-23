@@ -64,7 +64,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
             {formatPrice(property.price, property.listing_type)}
           </p>
           {isLand && (
-            <LandListingMeta price={property.price} size={property.size} className="mt-0.5 text-xs sm:text-sm" />
+            <LandListingMeta size={property.size} className="mt-0.5 text-xs sm:text-sm" />
           )}
           <h3 className="mt-1 line-clamp-1 text-sm font-semibold text-slate-800">
             {property.title || 'Imóvel disponível'}

@@ -8,7 +8,7 @@ import type { Property, PropertyPayload, PropertyType } from '../../types/proper
 import { LISTING_LABELS, PROPERTY_TYPE_LABELS } from '../../types/property'
 import type { User } from '../../types/user'
 import { formatWhatsAppPhone, getAgentInitials } from '../../utils/agent'
-import { digitsToNumber, formatPriceDigits, parsePriceDigits } from '../../utils/priceInput'
+import { digitsToNumber, formatAreaField, formatPriceDigits, parseAreaField, parsePriceDigits } from '../../utils/priceInput'
 import { Input, Textarea } from '../ui/Input'
 import { PropertyImages } from './PropertyImages'
 
@@ -64,11 +64,6 @@ function parseIntField(value: string): number | undefined {
   if (!trimmed) return undefined
   const num = parseInt(trimmed, 10)
   return Number.isNaN(num) ? undefined : num
-}
-
-function formatPricePerSqm(price: number, size: number): string | null {
-  if (size <= 0) return null
-  return `${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(price / size)}/m²`
 }
 
 function SegmentedControl<T extends string>({
@@ -290,6 +285,7 @@ export function PropertyForm({ property, defaultPropertyType, onSubmit, onCancel
       errors.price = listingType === 'rent' ? 'Informe o valor do aluguel' : 'Informe o preço'
     }
     if (isLand && !size.trim()) errors.size = 'Informe a área do terreno'
+    else if (size.trim() && parseAreaField(size) == null) errors.size = 'Informe uma área válida em m²'
     return errors
   }
 
@@ -317,7 +313,7 @@ export function PropertyForm({ property, defaultPropertyType, onSubmit, onCancel
       rooms: isLand ? null : parseIntField(rooms),
       bathrooms: isLand ? null : parseIntField(bathrooms),
       parking: isLand ? null : parseIntField(parking),
-      size: parseNumber(size),
+      size: parseAreaField(size),
       property_type: propertyType,
       listing_type: listingType,
     }
@@ -363,14 +359,13 @@ export function PropertyForm({ property, defaultPropertyType, onSubmit, onCancel
   }
 
   const isSaving = loading || uploadingPhotos
+  const parsedArea = parseAreaField(size)
   const summaryParts = [
     PROPERTY_TYPE_LABELS[propertyType],
     LISTING_LABELS[listingType],
     location.trim() || null,
     price.trim() ? formatPriceDigits(price) : null,
-    isLand && size.trim() && price.trim()
-      ? formatPricePerSqm(parseNumber(price)!, parseNumber(size)!)
-      : null,
+    parsedArea != null ? formatAreaField(parsedArea) : null,
   ].filter(Boolean)
 
   return (

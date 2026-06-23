@@ -10,7 +10,7 @@ import { recordPropertyEvent } from '../services/analyticsService'
 import { getProperty } from '../services/propertiesService'
 import type { Property } from '../types/property'
 import { LISTING_LABELS } from '../types/property'
-import { formatArea, formatPricePerSqm, normalizePropertyType, propertyTypeLabel } from '../utils/propertyDisplay'
+import { formatArea, normalizePropertyType, propertyTypeLabel } from '../utils/propertyDisplay'
 import { formatSocialProof } from '../utils/analytics'
 import { getAgentFirstName } from '../utils/agent'
 import { buildWhatsAppUrl, formatPrice, propertyWhatsAppMessage } from '../utils/format'
@@ -95,7 +95,6 @@ export function PropertyDetailPage() {
   const socialProof = formatSocialProof(property.stats?.views_7d ?? 0)
 
   const isLand = normalizePropertyType(property.property_type) === 'land'
-  const sqmPrice = formatPricePerSqm(property.price, property.size)
   const shareUrl = `${window.location.origin}/imovel/${property.id}`
   const specs: { label: string; value: string | number }[] = []
   if (!isLand && property.rooms != null) specs.push({ label: 'Quartos', value: property.rooms })
@@ -106,9 +105,6 @@ export function PropertyDetailPage() {
       label: isLand ? 'Área do terreno' : 'Área',
       value: formatArea(property.size) ?? `${property.size} m²`,
     })
-  }
-  if (isLand && sqmPrice) {
-    specs.push({ label: 'Valor por m²', value: sqmPrice })
   }
 
   return (

@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import { mediaUrl } from '../lib/api'
 import { PropertyForm } from '../components/properties/PropertyForm'
 import { PerformanceBar } from '../components/analytics/PerformanceBar'
+import { ListingTypeBadge, PropertyTypeBadge } from '../components/properties/PropertyTypeBadge'
 import { Button } from '../components/ui/Button'
 import { Modal } from '../components/ui/Modal'
 import { useAuth } from '../hooks/useAuth'
@@ -13,13 +14,11 @@ import {
   updateProperty,
 } from '../services/propertiesService'
 import type { Property, PropertyPayload, PropertyType } from '../types/property'
-import { PROPERTY_TYPE_LABELS } from '../types/property'
+import { LISTING_LABELS, PROPERTY_TYPE_LABELS } from '../types/property'
 import { formatPrice } from '../utils/format'
 import { formatWhatsAppPhone, getAgentInitials } from '../utils/agent'
 
 type ModalMode = 'create' | 'edit' | 'delete' | null
-
-const LISTING_LABEL: Record<string, string> = { sale: 'Venda', rent: 'Aluguel' }
 
 export function PropertiesPage() {
   const { isAdmin } = useAuth()
@@ -167,6 +166,9 @@ export function PropertiesPage() {
     }
   }
 
+  const pageViews7d = properties.reduce((sum, p) => sum + (p.stats?.views_7d ?? 0), 0)
+  const pageWhatsApp7d = properties.reduce((sum, p) => sum + (p.stats?.whatsapp_clicks_7d ?? 0), 0)
+
   return (
     <div>
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -226,8 +228,22 @@ export function PropertiesPage() {
           </div>
         ) : (
           <>
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 bg-slate-50/70 px-4 py-3 xl:px-5">
+              <p className="type-meta font-medium text-slate-600">
+                {properties.length} {properties.length === 1 ? 'anúncio nesta página' : 'anúncios nesta página'}
+              </p>
+              <div className="flex flex-wrap items-center gap-2 type-meta text-slate-500">
+                <span className="rounded-full bg-white px-2.5 py-1 ring-1 ring-slate-200/80">
+                  <span className="font-semibold text-blue-700 tabular-nums">{pageViews7d}</span> views (7d)
+                </span>
+                <span className="rounded-full bg-white px-2.5 py-1 ring-1 ring-slate-200/80">
+                  <span className="font-semibold text-emerald-700 tabular-nums">{pageWhatsApp7d}</span> WhatsApp (7d)
+                </span>
+              </div>
+            </div>
+
             {/* Cards — celular e tablet */}
-            <ul className="divide-y divide-slate-100 md:grid md:grid-cols-2 md:gap-3 md:divide-y-0 md:p-4 lg:hidden [&>li]:md:overflow-hidden [&>li]:md:rounded-xl [&>li]:md:border [&>li]:md:border-slate-200">
+            <ul className="divide-y divide-slate-100 md:grid md:grid-cols-2 md:gap-4 md:divide-y-0 md:p-4 lg:hidden [&>li]:md:overflow-hidden [&>li]:md:rounded-xl [&>li]:md:border [&>li]:md:border-slate-200 [&>li]:md:bg-white [&>li]:md:shadow-sm">
               {properties.map((property) => (
                 <PropertyMobileCard
                   key={property.id}
@@ -241,108 +257,66 @@ export function PropertiesPage() {
 
             {/* Tabela — desktop */}
             <div className="hidden overflow-x-auto lg:block">
-            <table className="type-table w-full text-left">
-              <thead>
-                <tr className="type-table-head border-b border-slate-100 bg-slate-50/80 uppercase text-slate-500">
-                  <th className="w-14 px-4 py-3 font-medium xl:px-5 xl:py-4" />
-                  <th className="px-4 py-3 font-medium xl:px-5 xl:py-4">Anúncio</th>
-                  <th className="px-4 py-3 font-medium xl:px-5 xl:py-4">Preço</th>
-                  <th className="px-4 py-3 font-medium xl:px-5 xl:py-4">Performance (7d)</th>
-                  {isAdmin && <th className="px-4 py-3 font-medium xl:px-5 xl:py-4">Responsável</th>}
-                  <th className="px-4 py-3 text-right font-medium xl:px-5 xl:py-4">Ações</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {properties.map((property) => (
-                  <tr
-                    key={property.id}
-                    className="group cursor-pointer hover:bg-slate-50/80"
-                    onClick={() => openEdit(property)}
-                  >
-                    <td className="px-4 py-3 xl:px-5 xl:py-4">
-                      {property.images?.[0] ? (
-                        <img
-                          src={mediaUrl(property.images[0].url)}
-                          alt=""
-                          className="h-10 w-10 rounded-lg object-cover xl:h-12 xl:w-12"
-                        />
-                      ) : (
-                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100 text-slate-400">
-                          —
-                        </div>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 xl:px-5 xl:py-4">
-                      <p className="font-medium text-slate-900">
-                        {property.title || <span className="italic text-slate-400">Sem título</span>}
-                      </p>
-                      <p className="type-meta text-slate-500">
-                        {PROPERTY_TYPE_LABELS[property.property_type] || 'Imóvel'}
-                        {' · '}
-                        {LISTING_LABEL[property.listing_type] || 'Venda'}
-                        {property.location ? ` · ${property.location}` : ''}
-                        {!property.images?.length && (
-                          <span className="ml-1 font-medium text-amber-600">· Sem fotos</span>
-                        )}
-                      </p>
-                    </td>
-                    <td className="px-4 py-3 font-medium text-slate-900 xl:px-5 xl:py-4">
-                      {formatPrice(property.price)}
-                      {property.listing_type === 'rent' && (
-                        <span className="type-meta font-normal text-slate-500">/mês</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 xl:px-5 xl:py-4">
-                      <PerformanceBar stats={property.stats} compact />
-                    </td>
-                    {isAdmin && (
-                      <td className="px-4 py-3 xl:px-5 xl:py-4">
-                        {property.agent_name ? (
-                          <div className="flex items-center gap-2">
-                            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-100 text-[0.65rem] font-semibold text-blue-700 xl:h-8 xl:w-8 xl:text-xs">
-                              {getAgentInitials(property.agent_name)}
-                            </span>
-                            <div className="min-w-0">
-                              <p className="truncate font-medium text-slate-800">{property.agent_name}</p>
-                              <p className="truncate type-meta text-slate-500">
-                                {formatWhatsAppPhone(property.agent_whatsapp)}
-                              </p>
-                            </div>
-                          </div>
-                        ) : (
-                          <span className="text-slate-400">—</span>
+              <table className="type-table w-full text-left">
+                <thead>
+                  <tr className="type-table-head border-b border-slate-100 bg-white uppercase text-slate-500">
+                    <th className="min-w-[22rem] px-5 py-3.5 font-medium xl:px-6 xl:py-4">Anúncio</th>
+                    <th className="px-5 py-3.5 font-medium xl:px-6 xl:py-4">Preço</th>
+                    <th className="min-w-[12rem] px-5 py-3.5 font-medium xl:px-6 xl:py-4">Performance (7d)</th>
+                    {isAdmin && <th className="min-w-[10rem] px-5 py-3.5 font-medium xl:px-6 xl:py-4">Responsável</th>}
+                    <th className="w-36 px-5 py-3.5 text-right font-medium xl:px-6 xl:py-4">Ações</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {properties.map((property) => (
+                    <tr
+                      key={property.id}
+                      className="group cursor-pointer transition-colors hover:bg-slate-50/80"
+                      onClick={() => openEdit(property)}
+                    >
+                      <td className="px-5 py-4 xl:px-6">
+                        <PropertyListingCell property={property} />
+                      </td>
+                      <td className="px-5 py-4 align-top xl:px-6">
+                        <p className="font-semibold tabular-nums text-slate-900">
+                          {formatPrice(property.price)}
+                        </p>
+                        {property.listing_type === 'rent' && (
+                          <p className="type-meta text-slate-500">por mês</p>
                         )}
                       </td>
-                    )}
-                    <td className="px-4 py-3 text-right xl:px-5 xl:py-4">
-                      <div className="flex justify-end gap-1">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            openEdit(property)
-                          }}
-                        >
-                          Editar
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-red-600 hover:bg-red-50 hover:text-red-700"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            openDelete(property)
-                          }}
-                        >
-                          Excluir
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                      <td className="px-5 py-4 align-top xl:px-6">
+                        <PerformanceBar stats={property.stats} variant="inline" />
+                      </td>
+                      {isAdmin && (
+                        <td className="px-5 py-4 align-top xl:px-6">
+                          {property.agent_name ? (
+                            <div className="flex items-center gap-2.5">
+                              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-100 text-xs font-semibold text-blue-700">
+                                {getAgentInitials(property.agent_name)}
+                              </span>
+                              <div className="min-w-0">
+                                <p className="truncate font-medium text-slate-800">{property.agent_name}</p>
+                                <p className="truncate type-meta text-slate-500">
+                                  {formatWhatsAppPhone(property.agent_whatsapp)}
+                                </p>
+                              </div>
+                            </div>
+                          ) : (
+                            <span className="text-slate-400">—</span>
+                          )}
+                        </td>
+                      )}
+                      <td className="px-5 py-4 text-right align-top xl:px-6">
+                        <PropertyRowActions
+                          onEdit={() => openEdit(property)}
+                          onDelete={() => openDelete(property)}
+                        />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </>
         )}
@@ -408,6 +382,82 @@ export function PropertiesPage() {
   )
 }
 
+function PropertyListingCell({ property }: { property: Property }) {
+  const hasPhotos = Boolean(property.images?.length)
+
+  return (
+    <div className="flex items-start gap-4">
+      <div className="relative shrink-0">
+        {property.images?.[0] ? (
+          <img
+            src={mediaUrl(property.images[0].url)}
+            alt=""
+            className="h-[4.5rem] w-[5.75rem] rounded-xl object-cover ring-1 ring-slate-200/80 xl:h-20 xl:w-[6.25rem]"
+          />
+        ) : (
+          <div className="flex h-[4.5rem] w-[5.75rem] flex-col items-center justify-center rounded-xl bg-slate-100 text-slate-400 ring-1 ring-slate-200/80 xl:h-20 xl:w-[6.25rem]">
+            <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+              <path
+                fillRule="evenodd"
+                d="M1 5.25A2.25 2.25 0 0 1 3.25 3h13.5A2.25 2.25 0 0 1 19 5.25v9.5A2.25 2.25 0 0 1 16.75 17H3.25A2.25 2.25 0 0 1 1 14.75v-9.5Zm4.026 2.475a.75.75 0 0 0-1.052.086l-2.5 3a.75.75 0 0 0 .902 1.18l1.273-.848 1.046 1.394a.75.75 0 0 0 1.213-.085l2.25-3.75 1.046 1.394a.75.75 0 0 0 1.213-.085l1.5-2.5a.75.75 0 0 0-.64-1.122H5.026Z"
+                clipRule="evenodd"
+              />
+            </svg>
+            <span className="mt-1 text-[0.625rem] font-medium">Sem foto</span>
+          </div>
+        )}
+      </div>
+
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+          <p className="font-semibold text-slate-900">
+            {property.title || <span className="italic font-normal text-slate-400">Sem título</span>}
+          </p>
+          <PropertyTypeBadge type={property.property_type} />
+          <ListingTypeBadge type={property.listing_type} />
+        </div>
+        {property.location && (
+          <p className="mt-1 truncate type-meta text-slate-500">{property.location}</p>
+        )}
+        {!hasPhotos && (
+          <p className="mt-1 type-meta font-medium text-amber-700">Adicione fotos para destacar no site</p>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function PropertyRowActions({
+  onEdit,
+  onDelete,
+}: {
+  onEdit: () => void
+  onDelete: () => void
+}) {
+  return (
+    <div
+      className="inline-flex overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <button
+        type="button"
+        onClick={onEdit}
+        className="px-3 py-1.5 type-meta font-medium text-slate-700 transition hover:bg-slate-50"
+      >
+        Editar
+      </button>
+      <span className="w-px self-stretch bg-slate-200" aria-hidden="true" />
+      <button
+        type="button"
+        onClick={onDelete}
+        className="px-3 py-1.5 type-meta font-medium text-red-600 transition hover:bg-red-50"
+      >
+        Excluir
+      </button>
+    </div>
+  )
+}
+
 function PropertyMobileCard({
   property,
   isAdmin,
@@ -430,41 +480,39 @@ function PropertyMobileCard({
           <img
             src={mediaUrl(property.images[0].url)}
             alt=""
-            className="h-16 w-16 shrink-0 rounded-xl object-cover"
+            className="h-20 w-24 shrink-0 rounded-xl object-cover ring-1 ring-slate-200/80"
           />
         ) : (
-          <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-400">
-            —
+          <div className="flex h-20 w-24 shrink-0 flex-col items-center justify-center rounded-xl bg-slate-100 text-slate-400 ring-1 ring-slate-200/80">
+            <span className="text-xs font-medium">Sem foto</span>
           </div>
         )}
         <div className="min-w-0 flex-1">
-          <p className="font-semibold text-slate-900">
-            {property.title || <span className="italic text-slate-400">Sem título</span>}
-          </p>
-          <p className="mt-0.5 text-sm font-medium text-slate-800">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <p className="font-semibold text-slate-900">
+              {property.title || <span className="italic font-normal text-slate-400">Sem título</span>}
+            </p>
+            <PropertyTypeBadge type={property.property_type} />
+          </div>
+          <p className="mt-1 text-sm font-semibold tabular-nums text-slate-900">
             {formatPrice(property.price)}
             {property.listing_type === 'rent' && (
-              <span className="text-xs font-normal text-slate-500">/mês</span>
+              <span className="text-xs font-normal text-slate-500"> /mês</span>
             )}
           </p>
-          <p className="mt-0.5 text-xs text-slate-500">
-            {PROPERTY_TYPE_LABELS[property.property_type] || 'Imóvel'}
-            {' · '}
-            {LISTING_LABEL[property.listing_type] || 'Venda'}
+          <p className="mt-0.5 truncate type-meta text-slate-500">
+            {LISTING_LABELS[property.listing_type]}
             {property.location ? ` · ${property.location}` : ''}
-            {!property.images?.length && (
-              <span className="font-medium text-amber-600"> · Sem fotos</span>
-            )}
           </p>
-          <div className="mt-2">
-            <PerformanceBar stats={property.stats} compact />
+          <div className="mt-2.5">
+            <PerformanceBar stats={property.stats} variant="inline" />
           </div>
           {isAdmin && property.agent_name && (
-            <p className="mt-1 truncate text-xs text-slate-400">{property.agent_name}</p>
+            <p className="mt-2 truncate type-meta text-slate-400">{property.agent_name}</p>
           )}
         </div>
       </button>
-      <div className="flex gap-2 border-t border-slate-50 px-4 pb-3">
+      <div className="flex gap-2 border-t border-slate-100 px-4 pb-3 pt-2">
         <Button variant="secondary" size="sm" className="flex-1" onClick={onEdit}>
           Editar
         </Button>
