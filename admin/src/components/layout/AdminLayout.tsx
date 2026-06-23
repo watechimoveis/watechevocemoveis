@@ -1,4 +1,5 @@
 import { Link, Navigate, Outlet, useLocation } from 'react-router-dom'
+import { BrandLogo } from '../brand/BrandLogo'
 import { useAuth } from '../../hooks/useAuth'
 import { Button } from '../ui/Button'
 
@@ -11,16 +12,8 @@ export function AdminLayout() {
       <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur">
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6">
           <div className="flex min-w-0 items-center gap-4 lg:gap-6">
-            <Link to="/" className="flex min-w-0 items-center gap-2.5 sm:gap-3">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-600 text-[9px] font-bold leading-none text-white">
-                WA
-              </div>
-              <div className="min-w-0">
-                <p className="truncate text-sm font-semibold text-slate-900 sm:max-w-none">
-                  W.A.Techevoceimoveis
-                </p>
-                <p className="text-xs text-slate-500">{isAdmin ? 'Administrador' : 'Corretor'}</p>
-              </div>
+            <Link to="/" className="flex min-w-0 items-center">
+              <BrandLogo size="sm" />
             </Link>
             <nav className="hidden items-center gap-1 lg:flex">
               <NavLink to="/" current={location.pathname} exact>
@@ -37,6 +30,7 @@ export function AdminLayout() {
             </nav>
           </div>
           <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+            <p className="hidden text-xs text-slate-500 sm:block">{isAdmin ? 'Administrador' : 'Corretor'}</p>
             <div className="hidden text-right md:block">
               <p className="text-sm font-medium text-slate-800">{user?.name}</p>
               <p className="text-xs text-slate-500">{user?.email}</p>

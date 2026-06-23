@@ -4,10 +4,11 @@ import { getCoverImage } from '../types/property'
 import { mediaUrl } from '../lib/api'
 import { formatPrice } from '../utils/format'
 
-const SITE_NAME = 'W.A.Techevoceimoveis'
-const DEFAULT_TITLE = `${SITE_NAME} — Encontre seu imóvel`
+import { BRAND } from '../lib/brand'
+
+const DEFAULT_TITLE = `${BRAND.name} — Encontre seu imóvel`
 const DEFAULT_DESCRIPTION =
-  'Encontre imóveis para compra ou aluguel e fale direto com o corretor responsável pelo WhatsApp.'
+  'Encontre terrenos e imóveis para compra ou aluguel e fale direto com o corretor responsável pelo WhatsApp.'
 
 function upsertMeta(name: string, content: string, property?: string) {
   const attr = property ? 'property' : 'name'
@@ -53,7 +54,7 @@ export function usePropertySeo(property: Property | null | undefined) {
       }
     }
 
-    const title = `${property.title || 'Imóvel'} · ${SITE_NAME}`
+    const title = `${property.title || 'Imóvel'} · ${BRAND.name}`
     const description = buildDescription(property)
     const image = mediaUrl(getCoverImage(property))
     const url = `${window.location.origin}/imovel/${property.id}`
@@ -84,7 +85,7 @@ export function usePropertySeo(property: Property | null | undefined) {
 
 export function usePageTitle(title?: string | null) {
   useEffect(() => {
-    document.title = title ? `${title} · ${SITE_NAME}` : DEFAULT_TITLE
+    document.title = title ? `${title} · ${BRAND.name}` : DEFAULT_TITLE
     return () => {
       document.title = DEFAULT_TITLE
     }

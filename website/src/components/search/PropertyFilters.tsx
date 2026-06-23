@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { LISTING_EMPTY_LABEL } from '../../lib/brand'
 import type { SearchState } from '../../hooks/usePropertySearch'
 import { useIsMobileLayout } from '../../hooks/useMediaQuery'
 import type { ListingType, SortOption } from '../../types/property'
@@ -116,7 +117,7 @@ export function PropertyFilters({
       {total != null && total >= 0 && (
         <p className="text-sm text-slate-500">
           {total === 0
-            ? `Nenhum imóvel para ${LISTING_LABELS[applied.listingType].toLowerCase()}`
+                ? `Nenhum imóvel ${LISTING_EMPTY_LABEL[applied.listingType]}`
             : `${total} ${total === 1 ? 'imóvel encontrado' : 'imóveis encontrados'}`}
         </p>
       )}
