@@ -95,7 +95,7 @@ export function PropertyDetailPage() {
   const socialProof = formatSocialProof(property.stats?.views_7d ?? 0)
 
   const isLand = normalizePropertyType(property.property_type) === 'land'
-  const sqmPrice = isLand ? formatPricePerSqm(property.price, property.size) : null
+  const sqmPrice = formatPricePerSqm(property.price, property.size)
   const shareUrl = `${window.location.origin}/imovel/${property.id}`
   const specs: { label: string; value: string | number }[] = []
   if (!isLand && property.rooms != null) specs.push({ label: 'Quartos', value: property.rooms })
@@ -106,6 +106,9 @@ export function PropertyDetailPage() {
       label: isLand ? 'Área do terreno' : 'Área',
       value: formatArea(property.size) ?? `${property.size} m²`,
     })
+  }
+  if (isLand && sqmPrice) {
+    specs.push({ label: 'Valor por m²', value: sqmPrice })
   }
 
   return (
@@ -141,9 +144,6 @@ export function PropertyDetailPage() {
             <p className="mt-3 text-3xl font-bold text-slate-900">
               {formatPrice(property.price, property.listing_type)}
             </p>
-            {sqmPrice && (
-              <p className="mt-1 text-sm font-medium text-slate-500">{sqmPrice}</p>
-            )}
             <h1 className="mt-2 text-2xl font-bold text-slate-900 sm:text-3xl">
               {property.title || 'Imóvel disponível'}
             </h1>
