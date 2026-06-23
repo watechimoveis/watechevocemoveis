@@ -203,8 +203,75 @@ export function PropertiesPage() {
             </Button>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[560px] text-left text-sm">
+          <>
+            {/* Mobile & tablet: cards */}
+            <div className="divide-y divide-slate-100 md:hidden">
+              {properties.map((property) => (
+                <article
+                  key={property.id}
+                  className="flex cursor-pointer gap-3 p-4 transition active:bg-slate-50"
+                  onClick={() => openEdit(property)}
+                >
+                  {property.images?.[0] ? (
+                    <img
+                      src={mediaUrl(property.images[0].url)}
+                      alt=""
+                      className="h-20 w-20 shrink-0 rounded-xl object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-400">
+                      —
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium text-slate-900">
+                      {property.title || <span className="italic text-slate-400">Sem título</span>}
+                    </p>
+                    <p className="mt-0.5 text-sm font-semibold text-slate-800">
+                      {formatPrice(property.price)}
+                      {property.listing_type === 'rent' && (
+                        <span className="text-xs font-normal text-slate-500">/mês</span>
+                      )}
+                    </p>
+                    <p className="mt-0.5 text-xs text-slate-500">
+                      {LISTING_LABEL[property.listing_type] || 'Compra'}
+                      {property.location ? ` · ${property.location}` : ''}
+                    </p>
+                    <PropertyPerformance stats={property.stats} />
+                    {isAdmin && property.agent_name && (
+                      <p className="mt-1 truncate text-xs text-slate-400">{property.agent_name}</p>
+                    )}
+                  </div>
+                  <div className="flex shrink-0 flex-col gap-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        openEdit(property)
+                      }}
+                    >
+                      Editar
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-red-600 hover:bg-red-50 hover:text-red-700"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        openDelete(property)
+                      }}
+                    >
+                      Excluir
+                    </Button>
+                  </div>
+                </article>
+              ))}
+            </div>
+
+            {/* Desktop: tabela */}
+            <div className="hidden overflow-x-auto md:block">
+              <table className="w-full text-left text-sm">
               <thead>
                 <tr className="border-b border-slate-100 bg-slate-50/80 text-xs uppercase tracking-wide text-slate-500">
                   <th className="w-14 px-4 py-3 font-medium" />
@@ -301,7 +368,8 @@ export function PropertiesPage() {
                 ))}
               </tbody>
             </table>
-          </div>
+            </div>
+          </>
         )}
       </div>
 

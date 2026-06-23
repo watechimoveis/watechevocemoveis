@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
+import sysestateBg from '../assets/sysestate.png'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
 import { useAuth } from '../hooks/useAuth'
@@ -14,6 +15,10 @@ export function LoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    document.title = 'Entrar — SysEstate'
+  }, [])
 
   useEffect(() => {
     const token = searchParams.get('token')
@@ -47,19 +52,34 @@ export function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
-      <div className="w-full max-w-sm">
-        <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-blue-600 text-xs font-bold leading-none text-white">
-            WA
-          </div>
-          <h1 className="text-2xl font-semibold text-slate-900">W.A.Techevoceimoveis</h1>
-          <p className="mt-1 text-sm text-slate-500">Entrar no painel administrativo</p>
+    <div className="relative flex min-h-screen items-center justify-center px-4 py-8 safe-top safe-bottom">
+      <img
+        src={sysestateBg}
+        alt=""
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 h-full w-full object-cover object-center"
+      />
+      <div
+        className="pointer-events-none absolute inset-0 bg-gradient-to-br from-slate-950/85 via-slate-900/70 to-slate-950/90"
+        aria-hidden="true"
+      />
+      <div
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(212,175,55,0.12),transparent_55%)]"
+        aria-hidden="true"
+      />
+
+      <div className="relative z-10 w-full max-w-md">
+        <div className="mb-6 text-center md:text-left">
+          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-amber-400/90">SysEstate</p>
+          <h1 className="mt-2 text-2xl font-bold text-white sm:text-3xl">Painel administrativo</h1>
+          <p className="mt-2 text-sm text-slate-300">
+            Gestão inteligente de terrenos, vendas e aluguéis
+          </p>
         </div>
 
         <form
           onSubmit={handleSubmit}
-          className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+          className="rounded-2xl border border-white/10 bg-white/95 p-6 shadow-2xl backdrop-blur-md sm:p-8"
         >
           {error && (
             <div className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">
@@ -92,6 +112,10 @@ export function LoginPage() {
             {loading ? 'Entrando…' : 'Entrar'}
           </Button>
         </form>
+
+        <p className="mt-6 text-center text-xs text-slate-400 md:text-left">
+          Acesso exclusivo para corretores e administradores
+        </p>
       </div>
     </div>
   )

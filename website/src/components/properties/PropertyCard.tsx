@@ -22,7 +22,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
   const coverSrc = mediaUrl(cover)
 
   return (
-    <article className="flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:shadow-md">
+    <article className="flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition active:scale-[0.99] hover:shadow-md">
       <Link to={`/imovel/${property.id}`} className="relative block">
         <div className="aspect-[4/3] bg-slate-100">
           {coverSrc ? (
@@ -71,7 +71,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
         <div className="mt-3 grid grid-cols-2 gap-2">
           <Link
             to={`/imovel/${property.id}`}
-            className="rounded-xl border border-slate-200 py-2 text-center text-xs font-semibold text-slate-700 hover:bg-slate-50 sm:text-sm"
+            className="rounded-xl border border-slate-200 py-3 text-center text-xs font-semibold text-slate-700 transition active:scale-[0.98] active:bg-slate-100 hover:bg-slate-50 sm:py-2 sm:text-sm"
           >
             Detalhes
           </Link>
@@ -79,7 +79,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
             href={whatsappUrl}
             size="sm"
             label={agentLabel ? agentLabel : 'WhatsApp'}
-            className="!py-2 !text-xs sm:!text-sm"
+            className="!py-3 !text-xs sm:!py-2 sm:!text-sm"
             onTrackClick={() => recordPropertyEvent(property.id, 'whatsapp_click')}
           />
         </div>

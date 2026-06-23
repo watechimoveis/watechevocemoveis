@@ -35,7 +35,7 @@ export function WhatsAppButton({
       target="_blank"
       rel="noopener noreferrer"
       onClick={() => onTrackClick?.()}
-      className={`inline-flex items-center justify-center rounded-xl bg-emerald-600 font-semibold text-white shadow-sm transition hover:bg-emerald-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 ${sizes[size]} ${fullWidth ? 'w-full' : ''} ${className}`}
+      className={`inline-flex items-center justify-center rounded-xl bg-emerald-600 font-semibold text-white shadow-sm transition active:scale-[0.98] hover:bg-emerald-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 ${sizes[size]} ${fullWidth ? 'w-full' : ''} ${className}`}
     >
       <WhatsAppIcon />
       {label}

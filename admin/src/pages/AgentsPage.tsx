@@ -153,8 +153,52 @@ export function AgentsPage() {
             Nenhum corretor cadastrado.
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[720px] text-left text-sm">
+          <>
+            {/* Mobile & tablet: cards */}
+            <div className="divide-y divide-slate-100 md:hidden">
+              {agents.map((agent) => (
+                <article
+                  key={agent.id}
+                  className="flex cursor-pointer items-center gap-3 p-4 transition active:bg-slate-50"
+                  onClick={() => openEdit(agent)}
+                >
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-blue-100 text-xs font-semibold text-blue-700">
+                    {getAgentInitials(agent.name)}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium text-slate-900">{agent.name}</p>
+                    <p className="truncate text-xs text-slate-500">{agent.email}</p>
+                    <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                      {agent.creci && <span>CRECI {agent.creci}</span>}
+                      {agent.whatsapp && <span>{formatWhatsAppPhone(agent.whatsapp)}</span>}
+                    </div>
+                  </div>
+                  <div className="flex shrink-0 flex-col items-end gap-2">
+                    <span
+                      className={`rounded-full px-2.5 py-1 text-xs font-medium ${
+                        agent.is_active ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'
+                      }`}
+                    >
+                      {agent.is_active ? 'Ativo' : 'Inativo'}
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        openEdit(agent)
+                      }}
+                    >
+                      Editar
+                    </Button>
+                  </div>
+                </article>
+              ))}
+            </div>
+
+            {/* Desktop: tabela */}
+            <div className="hidden overflow-x-auto md:block">
+              <table className="w-full text-left text-sm">
               <thead>
                 <tr className="border-b border-slate-100 bg-slate-50/80 text-xs uppercase tracking-wide text-slate-500">
                   <th className="px-4 py-3 font-medium">Corretor</th>
@@ -198,7 +242,8 @@ export function AgentsPage() {
                 ))}
               </tbody>
             </table>
-          </div>
+            </div>
+          </>
         )}
       </div>
 

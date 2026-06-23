@@ -166,7 +166,7 @@ export function PropertyDetailPage() {
             <SimilarProperties propertyId={property.id} />
           </div>
 
-          <div className="mt-8 lg:mt-0">
+          <div className="mt-8 hidden lg:mt-0 lg:block">
             <div className="lg:sticky lg:top-24">
               <AgentContactCard property={property} onWhatsAppClick={trackWhatsApp} />
             </div>
@@ -174,10 +174,10 @@ export function PropertyDetailPage() {
         </div>
       </main>
 
-      <div className="fixed inset-x-0 bottom-0 z-50 border-t border-slate-200 bg-white p-4 shadow-lg lg:hidden">
+      <div className="fixed inset-x-0 bottom-0 z-50 border-t border-slate-200 bg-white/95 p-4 shadow-lg backdrop-blur supports-[backdrop-filter]:bg-white/90 lg:hidden safe-bottom">
         <WhatsAppButton href={whatsappUrl} size="lg" fullWidth label={mobileCta} onTrackClick={trackWhatsApp} />
       </div>
-      <div className="h-20 lg:hidden" aria-hidden="true" />
+      <div className="h-[calc(5rem+env(safe-area-inset-bottom,0px))] lg:hidden" aria-hidden="true" />
     </>
   )
 }
