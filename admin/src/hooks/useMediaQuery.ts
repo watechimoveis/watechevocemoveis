@@ -16,7 +16,7 @@ export function useMediaQuery(query: string): boolean {
   return matches
 }
 
-/** Telas menores que desktop (celular + tablet). */
+/** Telas menores que tablet (celular). */
 export function useIsMobileLayout() {
-  return useMediaQuery('(max-width: 1023px)')
+  return useMediaQuery('(max-width: 767px)')
 }

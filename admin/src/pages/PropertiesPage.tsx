@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { mediaUrl } from '../lib/api'
 import { PropertyForm } from '../components/properties/PropertyForm'
+import { PerformanceBar } from '../components/analytics/PerformanceBar'
 import { Button } from '../components/ui/Button'
 import { Modal } from '../components/ui/Modal'
 import { useAuth } from '../hooks/useAuth'
@@ -11,11 +12,10 @@ import {
   listProperties,
   updateProperty,
 } from '../services/propertiesService'
-import type { Property, PropertyPayload, PropertyStats, PropertyType } from '../types/property'
+import type { Property, PropertyPayload, PropertyType } from '../types/property'
 import { PROPERTY_TYPE_LABELS } from '../types/property'
 import { formatPrice } from '../utils/format'
 import { formatWhatsAppPhone, getAgentInitials } from '../utils/agent'
-import { whatsappConversionRate } from '../utils/analytics'
 
 type ModalMode = 'create' | 'edit' | 'delete' | null
 
@@ -179,11 +179,12 @@ export function PropertiesPage() {
             {!isAdmin && ' · publicados no site com seu perfil'}
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="grid grid-cols-1 gap-2 sm:flex sm:flex-wrap">
           {(['land', 'house', 'apartment'] as PropertyType[]).map((type) => (
             <Button
               key={type}
               variant={type === 'land' ? 'primary' : 'secondary'}
+              className="w-full sm:w-auto"
               onClick={() => openCreate(type)}
             >
               + {PROPERTY_TYPE_LABELS[type]}
@@ -226,7 +227,7 @@ export function PropertiesPage() {
         ) : (
           <>
             {/* Cards — celular e tablet */}
-            <ul className="divide-y divide-slate-100 lg:hidden">
+            <ul className="divide-y divide-slate-100 md:grid md:grid-cols-2 md:gap-3 md:divide-y-0 md:p-4 lg:hidden [&>li]:md:overflow-hidden [&>li]:md:rounded-xl [&>li]:md:border [&>li]:md:border-slate-200">
               {properties.map((property) => (
                 <PropertyMobileCard
                   key={property.id}
@@ -292,7 +293,7 @@ export function PropertiesPage() {
                       )}
                     </td>
                     <td className="px-4 py-3 xl:px-5 xl:py-4">
-                      <PropertyPerformance stats={property.stats} />
+                      <PerformanceBar stats={property.stats} compact />
                     </td>
                     {isAdmin && (
                       <td className="px-4 py-3 xl:px-5 xl:py-4">
@@ -407,21 +408,6 @@ export function PropertiesPage() {
   )
 }
 
-function PropertyPerformance({ stats }: { stats?: PropertyStats }) {
-  const views = stats?.views_7d ?? 0
-  const clicks = stats?.whatsapp_clicks_7d ?? 0
-  const rate = stats ? whatsappConversionRate(stats) : null
-
-  return (
-    <div className="type-meta">
-      <p className="font-medium text-slate-800">{views} views</p>
-      <p className="text-slate-500">
-        {clicks} WhatsApp{rate ? ` · ${rate}` : ''}
-      </p>
-    </div>
-  )
-}
-
 function PropertyMobileCard({
   property,
   isAdmin,
@@ -471,7 +457,7 @@ function PropertyMobileCard({
             )}
           </p>
           <div className="mt-2">
-            <PropertyPerformance stats={property.stats} />
+            <PerformanceBar stats={property.stats} compact />
           </div>
           {isAdmin && property.agent_name && (
             <p className="mt-1 truncate text-xs text-slate-400">{property.agent_name}</p>

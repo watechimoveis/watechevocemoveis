@@ -76,6 +76,26 @@ class PropertyListResponse(BaseModel):
     pages: int
 
 
+class AnalyticsDayPoint(BaseModel):
+    date: str
+    views: int = 0
+    whatsapp: int = 0
+
+
+class AnalyticsPropertyRank(BaseModel):
+    id: UUID
+    title: str | None
+    views_7d: int = 0
+    whatsapp_clicks_7d: int = 0
+
+
+class AnalyticsOverviewResponse(BaseModel):
+    totals: PropertyStats
+    daily: list[AnalyticsDayPoint]
+    top_properties: list[AnalyticsPropertyRank]
+    conversion_rate: float | None = None
+
+
 class PaginationParams(BaseModel):
     page: int = Field(default=1, ge=1)
     limit: int = Field(default=20, ge=1, le=100)

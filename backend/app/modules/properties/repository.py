@@ -151,3 +151,9 @@ class PropertyRepository:
             return items[:limit]
 
         return _query()[:limit]
+
+    def list_ids(self, agent_user_id: UUID | None = None) -> list[UUID]:
+        stmt = select(Property.id)
+        if agent_user_id:
+            stmt = stmt.where(Property.agent_user_id == agent_user_id)
+        return list(self.db.scalars(stmt).all())

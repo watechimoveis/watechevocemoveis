@@ -113,7 +113,7 @@ function CategorySelector({
   return (
     <div>
       <p className="mb-2 text-sm font-medium text-slate-700">Categoria</p>
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-1 gap-2 min-[400px]:grid-cols-3">
         {CATEGORIES.map((cat) => (
           <button
             key={cat.value}
@@ -526,7 +526,7 @@ export function PropertyForm({ property, defaultPropertyType, onSubmit, onCancel
             />
           </div>
         ) : (
-          <div className="grid gap-4 sm:grid-cols-4">
+          <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
             <Input label="Quartos" name="rooms" type="number" min="0" value={rooms} onChange={(e) => setRooms(e.target.value)} />
             <Input label="Banheiros" name="bathrooms" type="number" min="0" value={bathrooms} onChange={(e) => setBathrooms(e.target.value)} />
             <Input label="Vagas" name="parking" type="number" min="0" value={parking} onChange={(e) => setParking(e.target.value)} />

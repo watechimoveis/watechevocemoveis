@@ -58,7 +58,7 @@ export function PropertyDetailPage() {
 
   if (loading) {
     return (
-      <main className="mx-auto max-w-4xl px-4 py-10 sm:px-6">
+      <main className="mx-auto max-w-4xl px-4 py-10 sm:px-6 xl:max-w-6xl">
         <div className="h-8 w-48 animate-pulse rounded-lg bg-slate-100" />
         <div className="mt-6 aspect-[16/9] animate-pulse rounded-2xl bg-slate-100" />
         <div className="mt-6 space-y-3">
@@ -71,7 +71,7 @@ export function PropertyDetailPage() {
 
   if (error || !property) {
     return (
-      <main className="mx-auto max-w-4xl px-4 py-20 text-center sm:px-6">
+      <main className="mx-auto max-w-4xl px-4 py-20 text-center sm:px-6 xl:max-w-6xl">
         <h1 className="text-2xl font-bold text-slate-900">Imóvel não encontrado</h1>
         <p className="mt-2 text-slate-500">Este imóvel pode ter sido removido ou o link está incorreto.</p>
         <Link
@@ -110,7 +110,7 @@ export function PropertyDetailPage() {
 
   return (
     <>
-      <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6 sm:py-10">
+      <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6 sm:py-10 xl:max-w-6xl">
         <Link
           to="/"
           className="inline-flex items-center gap-1 text-sm font-medium text-slate-500 transition hover:text-slate-900"
@@ -122,8 +122,8 @@ export function PropertyDetailPage() {
           <PropertyGallery images={property.images} title={property.title} propertyType={property.property_type} />
         </div>
 
-        <div className="mt-8 lg:grid lg:grid-cols-3 lg:gap-8">
-          <div className="lg:col-span-2">
+        <div className="mt-8 md:grid md:grid-cols-3 md:gap-8">
+          <div className="md:col-span-2">
             <div className="flex flex-wrap items-center gap-2">
               <span className="inline-block rounded-md bg-blue-100 px-2.5 py-1 text-xs font-bold uppercase tracking-wide text-blue-800">
                 {propertyTypeLabel(property.property_type)}
@@ -185,18 +185,18 @@ export function PropertyDetailPage() {
             <SimilarProperties propertyId={property.id} />
           </div>
 
-          <div className="mt-8 hidden lg:mt-0 lg:block">
-            <div className="lg:sticky lg:top-24">
+          <div className="mt-8 hidden md:mt-0 md:block">
+            <div className="md:sticky md:top-24">
               <AgentContactCard property={property} onWhatsAppClick={trackWhatsApp} />
             </div>
           </div>
         </div>
       </main>
 
-      <div className="fixed inset-x-0 bottom-0 z-50 border-t border-slate-200 bg-white p-4 shadow-lg safe-bottom lg:hidden">
+      <div className="fixed inset-x-0 bottom-0 z-50 border-t border-slate-200 bg-white p-4 shadow-lg safe-bottom md:hidden">
         <WhatsAppButton href={whatsappUrl} size="lg" fullWidth label={mobileCta} onTrackClick={trackWhatsApp} />
       </div>
-      <div className="h-[calc(5rem+env(safe-area-inset-bottom))] lg:hidden" aria-hidden="true" />
+      <div className="h-[calc(5rem+env(safe-area-inset-bottom))] md:hidden" aria-hidden="true" />
     </>
   )
 }

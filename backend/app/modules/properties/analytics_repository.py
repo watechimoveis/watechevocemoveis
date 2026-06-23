@@ -97,3 +97,47 @@ class PropertyAnalyticsRepository:
             .group_by(PropertyEvent.property_id)
         )
         return {row[0]: int(row[1]) for row in self.db.execute(stmt).all()}
+
+    def get_daily_series(self, property_ids: list[UUID], days: int = 7) -> list[dict[str, int | str]]:
+        if not property_ids or days < 1:
+            return []
+
+        now = datetime.now(timezone.utc)
+        today = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        series: list[dict[str, int | str]] = []
+
+        for offset in range(days - 1, -1, -1):
+            day_start = today - timedelta(days=offset)
+            day_end = day_start + timedelta(days=1)
+            views = self._count_unique_views_in_range(property_ids, day_start, day_end)
+            whatsapp = self._count_clicks_in_range(property_ids, day_start, day_end)
+            series.append(
+                {
+                    "date": day_start.date().isoformat(),
+                    "views": views,
+                    "whatsapp": whatsapp,
+                }
+            )
+        return series
+
+    def _count_unique_views_in_range(
+        self, property_ids: list[UUID], start: datetime, end: datetime
+    ) -> int:
+        stmt = select(func.count(func.distinct(PropertyEvent.session_hash))).where(
+            PropertyEvent.property_id.in_(property_ids),
+            PropertyEvent.event_type == EVENT_VIEW,
+            PropertyEvent.created_at >= start,
+            PropertyEvent.created_at < end,
+        )
+        return int(self.db.scalar(stmt) or 0)
+
+    def _count_clicks_in_range(
+        self, property_ids: list[UUID], start: datetime, end: datetime
+    ) -> int:
+        stmt = select(func.count()).where(
+            PropertyEvent.property_id.in_(property_ids),
+            PropertyEvent.event_type == EVENT_WHATSAPP_CLICK,
+            PropertyEvent.created_at >= start,
+            PropertyEvent.created_at < end,
+        )
+        return int(self.db.scalar(stmt) or 0)

@@ -249,3 +249,61 @@ class PropertyService:
 
         items = self.repository.list_similar(property_id, limit=3)
         return [self._to_response(item) for item in items]
+
+    def get_analytics_overview(self, user: CurrentUser, days: int = 7):
+        from app.modules.properties.schemas import (
+            AnalyticsDayPoint,
+            AnalyticsOverviewResponse,
+            AnalyticsPropertyRank,
+        )
+
+        agent_filter = user.id if user.is_agent else None
+        property_ids = self.repository.list_ids(agent_user_id=agent_filter)
+
+        if not property_ids:
+            empty = PropertyStats()
+            return AnalyticsOverviewResponse(
+                totals=empty,
+                daily=[],
+                top_properties=[],
+                conversion_rate=None,
+            )
+
+        raw_stats = self.analytics.get_stats_for_properties(property_ids)
+        totals = PropertyStats(
+            views_7d=sum(s.get("views_7d", 0) for s in raw_stats.values()),
+            views_30d=sum(s.get("views_30d", 0) for s in raw_stats.values()),
+            whatsapp_clicks_7d=sum(s.get("whatsapp_clicks_7d", 0) for s in raw_stats.values()),
+            whatsapp_clicks_30d=sum(s.get("whatsapp_clicks_30d", 0) for s in raw_stats.values()),
+        )
+
+        daily_raw = self.analytics.get_daily_series(property_ids, days=days)
+        daily = [AnalyticsDayPoint.model_validate(row) for row in daily_raw]
+
+        ranked: list[AnalyticsPropertyRank] = []
+        for pid in property_ids:
+            prop = self.repository.get_by_id(pid)
+            if not prop:
+                continue
+            s = raw_stats.get(pid, {})
+            ranked.append(
+                AnalyticsPropertyRank(
+                    id=pid,
+                    title=prop.title,
+                    views_7d=s.get("views_7d", 0),
+                    whatsapp_clicks_7d=s.get("whatsapp_clicks_7d", 0),
+                )
+            )
+        ranked.sort(key=lambda r: (r.whatsapp_clicks_7d, r.views_7d), reverse=True)
+        top = ranked[:5]
+
+        conversion = None
+        if totals.views_7d > 0:
+            conversion = round((totals.whatsapp_clicks_7d / totals.views_7d) * 100, 1)
+
+        return AnalyticsOverviewResponse(
+            totals=totals,
+            daily=daily,
+            top_properties=top,
+            conversion_rate=conversion,
+        )

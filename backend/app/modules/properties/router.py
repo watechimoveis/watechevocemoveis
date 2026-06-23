@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from app.modules.properties.controller import PropertyController
 from app.modules.properties.filters import PropertySearchFilters
 from app.modules.properties.schemas import (
+    AnalyticsOverviewResponse,
     PropertyCreate,
     PropertyEventCreate,
     PropertyEventResponse,
@@ -63,6 +64,15 @@ def list_properties(
         sort=sort,
     )
     return controller.list_properties(page, limit, user, filters)
+
+
+@router.get("/analytics/overview", response_model=AnalyticsOverviewResponse)
+def get_analytics_overview(
+    days: int = Query(default=7, ge=1, le=30),
+    user: CurrentUser = Depends(get_current_user),
+    controller: PropertyController = Depends(get_controller),
+):
+    return controller.get_analytics_overview(user, days=days)
 
 
 @router.get("/{property_id}/similar", response_model=list[PropertyResponse])

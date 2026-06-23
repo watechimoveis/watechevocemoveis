@@ -25,7 +25,7 @@ export function BottomSheet({ open, onClose, title, children, footer }: BottomSh
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end lg:hidden">
+    <div className="fixed inset-0 z-50 flex items-end md:hidden">
       <button
         type="button"
         aria-label="Fechar"

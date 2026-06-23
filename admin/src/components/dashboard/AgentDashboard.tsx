@@ -1,8 +1,11 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { PerformanceOverview } from '../analytics/PerformanceOverview'
 import { mediaUrl } from '../../lib/api'
 import { useAuth } from '../../hooks/useAuth'
+import { getAnalyticsOverview } from '../../services/analyticsService'
 import { listProperties } from '../../services/propertiesService'
+import type { AnalyticsOverview } from '../../types/analytics'
 import type { Property } from '../../types/property'
 import { LISTING_LABELS, PROPERTY_TYPE_LABELS } from '../../types/property'
 import { whatsappConversionRate } from '../../utils/analytics'
@@ -15,25 +18,31 @@ export function AgentDashboard() {
   const navigate = useNavigate()
   const [properties, setProperties] = useState<Property[]>([])
   const [total, setTotal] = useState(0)
-  const [totalWhatsApp, setTotalWhatsApp] = useState(0)
+  const [analytics, setAnalytics] = useState<AnalyticsOverview | null>(null)
   const [loading, setLoading] = useState(true)
+  const [analyticsLoading, setAnalyticsLoading] = useState(true)
 
   useEffect(() => {
-    listProperties(1, 5)
-      .then((data) => {
+    Promise.all([listProperties(1, 5), getAnalyticsOverview()])
+      .then(([data, overview]) => {
         setProperties(data.items)
         setTotal(data.total)
-        setTotalWhatsApp(data.items.reduce((sum, p) => sum + (p.stats?.whatsapp_clicks_7d ?? 0), 0))
+        setAnalytics(overview)
       })
-      .finally(() => setLoading(false))
+      .finally(() => {
+        setLoading(false)
+        setAnalyticsLoading(false)
+      })
   }, [])
+
+  const totalWhatsApp = analytics?.totals.whatsapp_clicks_7d ?? 0
 
   return (
     <div className="space-y-6">
       <div className="rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-white p-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-4">
-            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 text-lg font-bold text-emerald-800">
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 text-lg font-bold text-emerald-800 xl:h-16 xl:w-16 xl:text-xl">
               {getAgentInitials(user?.name)}
             </div>
             <div>
@@ -69,17 +78,24 @@ export function AgentDashboard() {
             </div>
             <div>
               <dt className="text-slate-500">Leads WhatsApp (7d)</dt>
-              <dd className="font-medium text-slate-800">{loading ? '…' : totalWhatsApp}</dd>
+              <dd className="font-medium text-slate-800">{analyticsLoading ? '…' : totalWhatsApp}</dd>
             </div>
           </dl>
         )}
       </div>
 
+      <PerformanceOverview
+        data={analytics}
+        loading={analyticsLoading}
+        title="Seu desempenho"
+        subtitle="Como seus anúncios estão performando no site esta semana"
+      />
+
       <section>
         <div className="mb-3 flex items-center justify-between">
           <h2 className="type-page-title text-lg font-semibold text-slate-900 xl:text-xl">Anúncios recentes</h2>
           {total > 5 && (
-            <Link to="/imoveis" className="text-sm font-medium text-blue-600 hover:underline">
+            <Link to="/imoveis" className="text-sm font-medium text-blue-600 hover:underline xl:text-base">
               Ver todos
             </Link>
           )}
@@ -108,20 +124,24 @@ export function AgentDashboard() {
                     e.preventDefault()
                     navigate(`/imoveis?editar=${property.id}`)
                   }}
-                  className="flex items-center gap-4 px-4 py-3 transition hover:bg-slate-50"
+                  className="flex items-center gap-4 px-4 py-3 transition hover:bg-slate-50 xl:px-5 xl:py-4"
                 >
                   {property.images[0] ? (
-                    <img src={mediaUrl(property.images[0].url)} alt="" className="h-12 w-12 rounded-lg object-cover" />
+                    <img
+                      src={mediaUrl(property.images[0].url)}
+                      alt=""
+                      className="h-12 w-12 rounded-lg object-cover xl:h-14 xl:w-14"
+                    />
                   ) : (
-                    <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-slate-100 text-slate-400">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-slate-100 text-slate-400 xl:h-14 xl:w-14">
                       —
                     </div>
                   )}
                   <div className="min-w-0 flex-1">
-                    <p className="truncate font-medium text-slate-900">
+                    <p className="truncate font-medium text-slate-900 xl:text-base">
                       {property.title || 'Sem título'}
                     </p>
-                    <p className="truncate text-sm text-slate-500">
+                    <p className="truncate type-page-lead text-slate-500">
                       {PROPERTY_TYPE_LABELS[property.property_type] || 'Imóvel'}
                       {' · '}
                       {property.listing_type === 'rent' ? LISTING_LABELS.rent : LISTING_LABELS.sale}
@@ -132,14 +152,14 @@ export function AgentDashboard() {
                     {(() => {
                       const rate = property.stats ? whatsappConversionRate(property.stats) : null
                       return (
-                        <p className="truncate text-xs text-slate-400">
+                        <p className="truncate type-meta text-slate-400">
                           {property.stats?.views_7d ?? 0} views · {property.stats?.whatsapp_clicks_7d ?? 0} WhatsApp
                           {rate ? ` · ${rate}` : ''}
                         </p>
                       )
                     })()}
                   </div>
-                  <span className="shrink-0 text-xs font-medium text-slate-400">
+                  <span className="type-meta shrink-0 font-medium text-slate-400">
                     {PROPERTY_TYPE_LABELS[property.property_type]?.slice(0, 3) || 'Imv'}
                   </span>
                 </Link>

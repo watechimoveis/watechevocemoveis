@@ -13,6 +13,7 @@ from app.modules.properties.schemas import (
     PropertyResponse,
     PropertyUpdate,
 )
+from app.modules.properties.schemas import AnalyticsOverviewResponse
 from app.modules.properties.service import PropertyService
 from app.shared.auth.security import CurrentUser
 
@@ -57,3 +58,6 @@ class PropertyController:
 
     def list_similar(self, property_id: UUID) -> list[PropertyResponse]:
         return self.service.list_similar(property_id)
+
+    def get_analytics_overview(self, user: CurrentUser, days: int = 7) -> AnalyticsOverviewResponse:
+        return self.service.get_analytics_overview(user, days=days)

@@ -15,7 +15,7 @@ export function AdminLayout() {
             <Link to="/" className="flex min-w-0 items-center">
               <BrandLogo size="sm" />
             </Link>
-            <nav className="hidden items-center gap-1 lg:flex">
+            <nav className="hidden items-center gap-1 md:flex">
               <NavLink to="/" current={location.pathname} exact>
                 Início
               </NavLink>
@@ -42,12 +42,12 @@ export function AdminLayout() {
         </div>
       </header>
 
-      <main className="admin-container py-5 sm:py-6 pb-bottom-nav lg:pb-6">
+      <main className="admin-container py-5 sm:py-6 pb-bottom-nav md:pb-6">
         <Outlet />
       </main>
 
       <nav
-        className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 backdrop-blur lg:hidden safe-bottom"
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 backdrop-blur md:hidden safe-bottom"
         aria-label="Navegação principal"
       >
         <div className="mx-auto flex max-w-lg items-stretch justify-around px-2 pt-1">

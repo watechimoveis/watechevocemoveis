@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { PerformanceOverview } from '../analytics/PerformanceOverview'
+import { getAnalyticsOverview } from '../../services/analyticsService'
 import { listAgents } from '../../services/agentsService'
 import { listProperties } from '../../services/propertiesService'
+import type { AnalyticsOverview } from '../../types/analytics'
 import type { Property } from '../../types/property'
 import { ActionCard } from '../ui/ActionCard'
 
@@ -12,23 +15,28 @@ export function AdminDashboard() {
   const [rentCount, setRentCount] = useState(0)
   const [totalViews7d, setTotalViews7d] = useState(0)
   const [totalWhatsApp7d, setTotalWhatsApp7d] = useState(0)
+  const [analytics, setAnalytics] = useState<AnalyticsOverview | null>(null)
   const [loading, setLoading] = useState(true)
+  const [analyticsLoading, setAnalyticsLoading] = useState(true)
 
   useEffect(() => {
     async function load() {
       try {
-        const [properties, agents] = await Promise.all([
+        const [properties, agents, overview] = await Promise.all([
           listProperties(1, 100),
           listAgents(),
+          getAnalyticsOverview(),
         ])
         setTotalProperties(properties.total)
         setTotalAgents(agents.filter((a) => a.is_active).length)
         setSaleCount(properties.items.filter((p: Property) => p.listing_type === 'sale').length)
         setRentCount(properties.items.filter((p: Property) => p.listing_type === 'rent').length)
-        setTotalViews7d(properties.items.reduce((sum, p) => sum + (p.stats?.views_7d ?? 0), 0))
-        setTotalWhatsApp7d(properties.items.reduce((sum, p) => sum + (p.stats?.whatsapp_clicks_7d ?? 0), 0))
+        setTotalViews7d(overview.totals.views_7d)
+        setTotalWhatsApp7d(overview.totals.whatsapp_clicks_7d)
+        setAnalytics(overview)
       } finally {
         setLoading(false)
+        setAnalyticsLoading(false)
       }
     }
     load()
@@ -41,14 +49,21 @@ export function AdminDashboard() {
         <p className="type-page-lead mt-1 text-slate-500">Gerencie corretores e todos os anúncios do site</p>
       </div>
 
-      <div className="-mx-4 flex gap-3 overflow-x-auto scroll-snap-x px-4 pb-1 sm:mx-0 sm:grid sm:grid-cols-3 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-6">
-        <StatCard label="Anúncios" value={loading ? '—' : totalProperties} className="scroll-snap-item min-w-[9rem] shrink-0 sm:min-w-0 sm:shrink" />
-        <StatCard label="Corretores ativos" value={loading ? '—' : totalAgents} className="scroll-snap-item min-w-[9rem] shrink-0 sm:min-w-0 sm:shrink" />
-        <StatCard label="Venda" value={loading ? '—' : saleCount} className="scroll-snap-item min-w-[9rem] shrink-0 sm:min-w-0 sm:shrink" />
-        <StatCard label="Aluguel" value={loading ? '—' : rentCount} className="scroll-snap-item min-w-[9rem] shrink-0 sm:min-w-0 sm:shrink" />
-        <StatCard label="Views (7d)" value={loading ? '—' : totalViews7d} className="scroll-snap-item min-w-[9rem] shrink-0 sm:min-w-0 sm:shrink" />
-        <StatCard label="WhatsApp (7d)" value={loading ? '—' : totalWhatsApp7d} highlight className="scroll-snap-item min-w-[9rem] shrink-0 sm:min-w-0 sm:shrink" />
+      <div className="-mx-4 flex gap-3 overflow-x-auto scroll-snap-x px-4 pb-1 md:mx-0 md:grid md:grid-cols-3 md:overflow-visible md:px-0 md:pb-0 xl:grid-cols-6">
+        <StatCard label="Anúncios" value={loading ? '—' : totalProperties} className="scroll-snap-item min-w-[9rem] shrink-0 md:min-w-0 md:shrink" />
+        <StatCard label="Corretores ativos" value={loading ? '—' : totalAgents} className="scroll-snap-item min-w-[9rem] shrink-0 md:min-w-0 md:shrink" />
+        <StatCard label="Venda" value={loading ? '—' : saleCount} className="scroll-snap-item min-w-[9rem] shrink-0 md:min-w-0 md:shrink" />
+        <StatCard label="Aluguel" value={loading ? '—' : rentCount} className="scroll-snap-item min-w-[9rem] shrink-0 md:min-w-0 md:shrink" />
+        <StatCard label="Views (7d)" value={loading ? '—' : totalViews7d} className="scroll-snap-item min-w-[9rem] shrink-0 md:min-w-0 md:shrink" />
+        <StatCard label="WhatsApp (7d)" value={loading ? '—' : totalWhatsApp7d} highlight className="scroll-snap-item min-w-[9rem] shrink-0 md:min-w-0 md:shrink" />
       </div>
+
+      <PerformanceOverview
+        data={analytics}
+        loading={analyticsLoading}
+        title="Desempenho da operação"
+        subtitle="Métricas consolidadas de todos os anúncios no site"
+      />
 
       <section>
         <h2 className="type-section-label mb-3 font-semibold uppercase text-slate-500">Ações rápidas</h2>
@@ -104,7 +119,7 @@ function AdvancedLink({ to, title, desc }: { to: string; title: string; desc: st
     <li>
       <Link to={to} className="flex items-center justify-between py-3 transition hover:text-blue-700">
         <div>
-          <p className="font-medium text-slate-900">{title}</p>
+          <p className="font-medium text-slate-900 xl:text-base">{title}</p>
           <p className="type-page-lead text-slate-500">{desc}</p>
         </div>
         <span className="text-slate-400">→</span>

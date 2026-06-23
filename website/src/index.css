@@ -11,6 +11,18 @@
   }
 }
 
+@media (min-width: 1280px) {
+  html {
+    font-size: clamp(16px, 15px + 0.22vw, 18.5px);
+  }
+}
+
+@media (min-width: 1536px) {
+  html {
+    font-size: clamp(17px, 16px + 0.28vw, 20px);
+  }
+}
+
 body {
   @apply bg-white text-slate-900 antialiased;
   -webkit-tap-highlight-color: transparent;
@@ -31,4 +43,17 @@ body {
 
 .scroll-snap-item {
   scroll-snap-align: start;
+}
+
+@utility site-container {
+  @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
+  max-width: min(100%, 80rem);
+}
+
+@media (min-width: 1536px) {
+  .site-container {
+    max-width: min(100%, 88rem);
+    padding-left: 2.5rem;
+    padding-right: 2.5rem;
+  }
 }

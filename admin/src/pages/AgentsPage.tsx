@@ -154,7 +154,7 @@ export function AgentsPage() {
           </div>
         ) : (
           <>
-            <ul className="divide-y divide-slate-100 lg:hidden">
+            <ul className="divide-y divide-slate-100 md:grid md:grid-cols-2 md:gap-3 md:divide-y-0 md:p-4 lg:hidden [&>li]:md:overflow-hidden [&>li]:md:rounded-xl [&>li]:md:border [&>li]:md:border-slate-200">
               {agents.map((agent) => (
                 <li key={agent.id}>
                   <button
