@@ -27,9 +27,10 @@ export function Input({ label, error, id, className = '', ...props }: InputProps
 
 interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
   label?: string
+  error?: string
 }
 
-export function Textarea({ label, id, className = '', ...props }: TextareaProps) {
+export function Textarea({ label, id, error, className = '', ...props }: TextareaProps) {
   const inputId = id || props.name
 
   return (
@@ -42,9 +43,10 @@ export function Textarea({ label, id, className = '', ...props }: TextareaProps)
       <textarea
         id={inputId}
         rows={4}
-        className={`w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 ${className}`}
+        className={`w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 ${error ? 'border-red-400' : ''} ${className}`}
         {...props}
       />
+      {error && <p className="text-xs text-red-600">{error}</p>}
     </div>
   )
 }

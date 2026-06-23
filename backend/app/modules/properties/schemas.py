@@ -34,7 +34,7 @@ class PropertyBase(BaseModel):
 
     title: str | None = None
     listing_type: str | None = "sale"
-    property_type: str | None = "land"
+    property_type: str | None = Field(default="land", pattern="^(house|apartment|land)$")
     location: str | None = None
     price: Decimal | None = None
     description: str | None = None

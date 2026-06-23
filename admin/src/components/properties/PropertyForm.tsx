@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { useAuth } from '../../hooks/useAuth'
+import { propertyPublicUrl } from '../../lib/site'
 import { listAgents } from '../../services/agentsService'
 import { uploadPropertyImages } from '../../services/propertiesService'
 import { whatsappConversionRate } from '../../utils/analytics'
@@ -7,6 +8,7 @@ import type { Property, PropertyPayload, PropertyType } from '../../types/proper
 import { LISTING_LABELS, PROPERTY_TYPE_LABELS } from '../../types/property'
 import type { User } from '../../types/user'
 import { formatWhatsAppPhone, getAgentInitials } from '../../utils/agent'
+import { digitsToNumber, formatPriceDigits, parsePriceDigits } from '../../utils/priceInput'
 import { Input, Textarea } from '../ui/Input'
 import { PropertyImages } from './PropertyImages'
 
@@ -15,11 +17,22 @@ interface PropertyFormProps {
   onSubmit: (payload: PropertyPayload) => Promise<Property | void>
   onCancel: () => void
   onPropertyChange?: (property: Property) => void
+  onSuccess?: (result: { property: Property; photosUploaded: number; isNew: boolean }) => void
   loading?: boolean
 }
 
-const PROPERTY_TYPES: PropertyType[] = ['land', 'house', 'apartment']
 const LISTING_TYPES = ['sale', 'rent'] as const
+
+const CATEGORIES: {
+  value: PropertyType
+  label: string
+  hint: string
+  icon: string
+}[] = [
+  { value: 'land', label: 'Terreno', hint: 'Lote, área, condomínio', icon: '🏞️' },
+  { value: 'house', label: 'Casa', hint: 'Térrea, sobrado, chácara', icon: '🏠' },
+  { value: 'apartment', label: 'Apartamento', hint: 'Flat, cobertura, kitnet', icon: '🏢' },
+]
 
 const TITLE_PLACEHOLDERS: Record<PropertyType, string> = {
   land: 'Ex: Terreno 360m² em condomínio fechado',
@@ -28,10 +41,13 @@ const TITLE_PLACEHOLDERS: Record<PropertyType, string> = {
 }
 
 const DESCRIPTION_PLACEHOLDERS: Record<PropertyType, string> = {
-  land: 'Topografia, zoneamento, infraestrutura, acesso…',
-  house: 'Detalhes da casa, acabamento, área externa…',
-  apartment: 'Detalhes do apartamento, condomínio, lazer…',
+  land: 'Topografia, zoneamento, infraestrutura (água, luz), acesso…',
+  house: 'Detalhes da casa, acabamento, área externa, condomínio…',
+  apartment: 'Detalhes do apartamento, condomínio, lazer, mobília…',
 }
+
+const LAND_TAGS = ['Investimento', 'Construção', 'Comércio', 'Plano', 'Esquina', 'Declive']
+const RESIDENTIAL_TAGS = ['Mobiliado', 'Aceita pet', 'Condomínio', 'Garagem', 'Novo', 'Reformado']
 
 function toFormValue(value: string | number | null | undefined): string {
   if (value == null) return ''
@@ -39,10 +55,7 @@ function toFormValue(value: string | number | null | undefined): string {
 }
 
 function parseNumber(value: string): number | undefined {
-  const trimmed = value.trim()
-  if (!trimmed) return undefined
-  const num = Number(trimmed)
-  return Number.isNaN(num) ? undefined : num
+  return digitsToNumber(parsePriceDigits(value))
 }
 
 function parseIntField(value: string): number | undefined {
@@ -66,13 +79,13 @@ function SegmentedControl<T extends string>({
   return (
     <div>
       <p className="mb-2 text-sm font-medium text-slate-700">{label}</p>
-      <div className="inline-flex flex-wrap rounded-lg bg-slate-100 p-1">
+      <div className="inline-flex w-full rounded-lg bg-slate-100 p-1 sm:w-auto">
         {options.map((option) => (
           <button
             key={option.value}
             type="button"
             onClick={() => onChange(option.value)}
-            className={`rounded-md px-3 py-1.5 text-sm font-medium sm:px-4 ${
+            className={`flex-1 rounded-md px-4 py-2 text-sm font-medium sm:flex-none ${
               value === option.value ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-600'
             }`}
           >
@@ -84,7 +97,112 @@ function SegmentedControl<T extends string>({
   )
 }
 
-export function PropertyForm({ property, onSubmit, onCancel, onPropertyChange, loading }: PropertyFormProps) {
+function CategorySelector({
+  value,
+  onChange,
+}: {
+  value: PropertyType
+  onChange: (value: PropertyType) => void
+}) {
+  return (
+    <div>
+      <p className="mb-2 text-sm font-medium text-slate-700">Categoria</p>
+      <div className="grid grid-cols-3 gap-2">
+        {CATEGORIES.map((cat) => (
+          <button
+            key={cat.value}
+            type="button"
+            onClick={() => onChange(cat.value)}
+            className={`rounded-xl border px-3 py-3 text-left transition ${
+              value === cat.value
+                ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-500/20'
+                : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
+            }`}
+          >
+            <span className="text-xl" aria-hidden="true">
+              {cat.icon}
+            </span>
+            <p className={`mt-1 text-sm font-semibold ${value === cat.value ? 'text-blue-800' : 'text-slate-900'}`}>
+              {cat.label}
+            </p>
+            <p className="mt-0.5 text-[11px] leading-tight text-slate-500">{cat.hint}</p>
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function suggestTitle(
+  propertyType: PropertyType,
+  listingType: 'sale' | 'rent',
+  location: string,
+  size: string,
+  rooms: string,
+): string | null {
+  const place = location.split(',')[0]?.trim()
+  if (!place && !size && !rooms) return null
+
+  if (propertyType === 'land') {
+    if (!size) return place ? `Terreno — ${place}` : null
+    return place ? `Terreno ${size}m² — ${place}` : `Terreno ${size}m²`
+  }
+
+  const typeLabel = PROPERTY_TYPE_LABELS[propertyType]
+  const rentSuffix = listingType === 'rent' ? ' para alugar' : ''
+  if (rooms) {
+    const q = parseInt(rooms, 10)
+    const qt = q === 1 ? '1 quarto' : `${q} quartos`
+    return place ? `${typeLabel} ${qt}${rentSuffix} — ${place}` : `${typeLabel} ${qt}${rentSuffix}`
+  }
+
+  return place ? `${typeLabel}${rentSuffix} — ${place}` : null
+}
+
+function CreatedBanner({ propertyId, photoCount }: { propertyId: string; photoCount: number }) {
+  const [copied, setCopied] = useState(false)
+  const url = propertyPublicUrl(propertyId)
+
+  async function copyLink() {
+    try {
+      await navigator.clipboard.writeText(url)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      window.prompt('Copie o link do anúncio:', url)
+    }
+  }
+
+  return (
+    <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900" role="status">
+      <p className="font-semibold">
+        Anúncio publicado no site{photoCount > 0 ? ` com ${photoCount} foto(s)` : ''}!
+      </p>
+      <p className="mt-0.5 text-emerald-800/90">
+        Compartilhe o link com interessados ou clique em <strong>Concluir</strong>.
+      </p>
+      <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
+        <a
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="truncate text-xs font-medium text-emerald-700 underline decoration-emerald-400/60 hover:text-emerald-900"
+        >
+          {url}
+        </a>
+        <button
+          type="button"
+          onClick={copyLink}
+          className="shrink-0 rounded-lg bg-emerald-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-800"
+        >
+          {copied ? 'Copiado!' : 'Copiar link'}
+        </button>
+      </div>
+    </div>
+  )
+}
+
+export function PropertyForm({ property, onSubmit, onCancel, onPropertyChange, onSuccess, loading }: PropertyFormProps) {
   const { user, isAdmin, isAgent } = useAuth()
   const [agents, setAgents] = useState<User[]>([])
   const [title, setTitle] = useState('')
@@ -100,8 +218,13 @@ export function PropertyForm({ property, onSubmit, onCancel, onPropertyChange, l
   const [agentUserId, setAgentUserId] = useState('')
   const [pendingPhotos, setPendingPhotos] = useState<File[]>([])
   const [uploadingPhotos, setUploadingPhotos] = useState(false)
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
+  const [justCreated, setJustCreated] = useState(false)
+  const [photoError, setPhotoError] = useState('')
+  const [publishedPhotos, setPublishedPhotos] = useState(0)
 
   const isLand = propertyType === 'land'
+  const isNew = !property?.id
   const selectedAgent = agents.find((a) => a.id === agentUserId)
   const canSubmitAsAdmin =
     !isAdmin ||
@@ -120,7 +243,7 @@ export function PropertyForm({ property, onSubmit, onCancel, onPropertyChange, l
   useEffect(() => {
     setTitle(toFormValue(property?.title))
     setLocation(toFormValue(property?.location))
-    setPrice(toFormValue(property?.price))
+    setPrice(property?.price != null ? String(Math.round(property.price)) : '')
     setDescription(toFormValue(property?.description))
     setRooms(toFormValue(property?.rooms))
     setBathrooms(toFormValue(property?.bathrooms))
@@ -130,6 +253,10 @@ export function PropertyForm({ property, onSubmit, onCancel, onPropertyChange, l
     setListingType(property?.listing_type || 'sale')
     setAgentUserId(property?.agent_user_id || '')
     setPendingPhotos([])
+    setFieldErrors({})
+    setJustCreated(false)
+    setPhotoError('')
+    setPublishedPhotos(0)
   }, [property])
 
   function handlePropertyTypeChange(next: PropertyType) {
@@ -141,11 +268,44 @@ export function PropertyForm({ property, onSubmit, onCancel, onPropertyChange, l
     }
   }
 
+  function appendTag(tag: string) {
+    const bullet = `• ${tag}`
+    if (description.includes(tag)) return
+    setDescription(description.trim() ? `${description.trim()}\n${bullet}` : bullet)
+  }
+
+  function validate(): Record<string, string> {
+    const errors: Record<string, string> = {}
+    if (!title.trim() && !titleSuggestion) errors.title = 'Informe um título para o anúncio'
+    if (!location.trim()) errors.location = 'Informe bairro ou cidade'
+    if (!price.trim() || parseNumber(price) == null) {
+      errors.price = listingType === 'rent' ? 'Informe o valor do aluguel' : 'Informe o preço'
+    }
+    if (isLand && !size.trim()) errors.size = 'Informe a área do terreno'
+    return errors
+  }
+
+  function scrollToFirstError(errors: Record<string, string>) {
+    const first = Object.keys(errors)[0]
+    if (!first) return
+    document.getElementById(`field-${first}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  }
+
+  const titleSuggestion = suggestTitle(propertyType, listingType, location, size, rooms)
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
+    const errors = validate()
+    setFieldErrors(errors)
+    if (Object.keys(errors).length > 0) {
+      scrollToFirstError(errors)
+      return
+    }
+
+    setPhotoError('')
     const payload: PropertyPayload = {
-      title: title.trim() || undefined,
-      location: location.trim() || undefined,
+      title: (title.trim() || titleSuggestion || '').trim(),
+      location: location.trim(),
       price: parseNumber(price),
       description: description.trim() || undefined,
       rooms: isLand ? null : parseIntField(rooms),
@@ -160,17 +320,35 @@ export function PropertyForm({ property, onSubmit, onCancel, onPropertyChange, l
       payload.agent_user_id = agentUserId
     }
 
+    const wasNew = isNew
     const saved = await onSubmit(payload)
-    if (!saved?.id || pendingPhotos.length === 0) return
+    if (!saved?.id) return
 
-    setUploadingPhotos(true)
-    try {
-      const uploaded = await uploadPropertyImages(saved.id, pendingPhotos)
-      onPropertyChange?.({ ...saved, images: uploaded })
-      setPendingPhotos([])
-    } finally {
-      setUploadingPhotos(false)
+    let photosUploaded = saved.images?.length ?? 0
+
+    if (pendingPhotos.length > 0) {
+      setUploadingPhotos(true)
+      try {
+        const uploaded = await uploadPropertyImages(saved.id, pendingPhotos)
+        const next = { ...saved, images: [...(saved.images ?? []), ...uploaded] }
+        photosUploaded = next.images.length
+        onPropertyChange?.(next)
+        setPendingPhotos([])
+      } catch {
+        setPhotoError('Imóvel salvo, mas falhou ao enviar fotos. Adicione novamente abaixo.')
+        photosUploaded = saved.images?.length ?? 0
+      } finally {
+        setUploadingPhotos(false)
+      }
     }
+
+    if (wasNew) {
+      setJustCreated(true)
+      setPublishedPhotos(photosUploaded)
+    } else {
+      setJustCreated(false)
+    }
+    onSuccess?.({ property: saved, photosUploaded, isNew: wasNew })
   }
 
   function handleImagesChange(images: Property['images']) {
@@ -179,9 +357,20 @@ export function PropertyForm({ property, onSubmit, onCancel, onPropertyChange, l
   }
 
   const isSaving = loading || uploadingPhotos
+  const summaryParts = [
+    PROPERTY_TYPE_LABELS[propertyType],
+    LISTING_LABELS[listingType],
+    location.trim() || null,
+    price.trim() ? formatPriceDigits(price) : null,
+  ].filter(Boolean)
 
   return (
-    <form id="property-form" onSubmit={handleSubmit} className="space-y-6">
+    <form id="property-form" onSubmit={handleSubmit} className="flex flex-col">
+      <div className="space-y-6 pb-4">
+      {justCreated && property?.id && (
+        <CreatedBanner propertyId={property.id} photoCount={publishedPhotos} />
+      )}
+
       {isAgent && user && (
         <section className="rounded-xl border border-emerald-200 bg-emerald-50/60 p-4">
           <div className="flex items-start gap-3">
@@ -216,11 +405,6 @@ export function PropertyForm({ property, onSubmit, onCancel, onPropertyChange, l
                   WhatsApp não cadastrado. Peça ao administrador para atualizar seu perfil.
                 </p>
               )}
-              {user.whatsapp && !user.creci && (
-                <p className="mt-2 text-xs text-amber-700">
-                  CRECI não informado — peça ao admin para completar seu cadastro.
-                </p>
-              )}
             </div>
           </div>
         </section>
@@ -229,13 +413,10 @@ export function PropertyForm({ property, onSubmit, onCancel, onPropertyChange, l
       {isAdmin && (
         <section className="rounded-xl border border-slate-200 bg-slate-50/80 p-4">
           <h3 className="text-sm font-semibold text-slate-900">Corretor responsável</h3>
-          <p className="mt-0.5 text-xs text-slate-500">
-            Selecione o corretor. Nome, CRECI e WhatsApp serão preenchidos automaticamente a partir do perfil.
-          </p>
           <select
             value={agentUserId}
             onChange={(e) => setAgentUserId(e.target.value)}
-            required={!property?.id}
+            required={isNew}
             className="mt-3 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
           >
             <option value="">Selecione um corretor</option>
@@ -247,84 +428,94 @@ export function PropertyForm({ property, onSubmit, onCancel, onPropertyChange, l
               </option>
             ))}
           </select>
-          {!property?.id && !agentUserId && (
+          {isNew && !agentUserId && (
             <p className="mt-2 text-xs font-medium text-amber-700">
               O imóvel só aparece no site quando vinculado a um corretor com WhatsApp.
-            </p>
-          )}
-          {selectedAgent && !selectedAgent.whatsapp && (
-            <p className="mt-2 text-xs font-medium text-red-600">
-              Este corretor não tem WhatsApp. Atualize o cadastro em Corretores antes de publicar.
-            </p>
-          )}
-          {selectedAgent && !selectedAgent.creci && (
-            <p className="mt-2 text-xs text-amber-700">
-              CRECI não informado — recomendado para transmitir confiança no site.
             </p>
           )}
         </section>
       )}
 
       <section className="space-y-4">
-        <div>
-          <h3 className="text-sm font-semibold text-slate-900">Informações do imóvel</h3>
-        </div>
+        <CategorySelector value={propertyType} onChange={handlePropertyTypeChange} />
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <SegmentedControl
-            label="Categoria"
-            value={propertyType}
-            options={PROPERTY_TYPES.map((type) => ({ value: type, label: PROPERTY_TYPE_LABELS[type] }))}
-            onChange={handlePropertyTypeChange}
-          />
-          <SegmentedControl
-            label="Negócio"
-            value={listingType}
-            options={LISTING_TYPES.map((type) => ({ value: type, label: LISTING_LABELS[type] }))}
-            onChange={setListingType}
-          />
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Input
-            label={listingType === 'rent' ? 'Aluguel mensal (R$)' : 'Preço (R$)'}
-            name="price"
-            type="number"
-            min="0"
-            step="1"
-            placeholder={isLand ? '180000' : '450000'}
-            value={price}
-            onChange={(e) => setPrice(e.target.value)}
-          />
-          <Input
-            label="Localização"
-            name="location"
-            placeholder="Ex: Centro, Campos dos Goytacazes"
-            value={location}
-            onChange={(e) => setLocation(e.target.value)}
-          />
-        </div>
-
-        <Input
-          label="Título"
-          name="title"
-          placeholder={TITLE_PLACEHOLDERS[propertyType]}
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          autoFocus
+        <SegmentedControl
+          label="Negócio"
+          value={listingType}
+          options={LISTING_TYPES.map((type) => ({ value: type, label: LISTING_LABELS[type] }))}
+          onChange={setListingType}
         />
 
-        {isLand ? (
+        {summaryParts.length >= 2 && (
+          <p className="rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-600">
+            <span className="font-medium text-slate-800">Prévia:</span> {summaryParts.join(' · ')}
+          </p>
+        )}
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div id="field-price">
+            <Input
+              label={listingType === 'rent' ? 'Aluguel mensal' : 'Preço'}
+              name="price"
+              type="text"
+              inputMode="numeric"
+              required
+              placeholder="R$ 0"
+              value={formatPriceDigits(price)}
+              error={fieldErrors.price}
+              onChange={(e) => setPrice(parsePriceDigits(e.target.value))}
+            />
+          </div>
+          <div id="field-location">
+            <Input
+              label="Localização"
+              name="location"
+              required
+              placeholder="Ex: Centro, Campos dos Goytacazes"
+              value={location}
+              error={fieldErrors.location}
+              onChange={(e) => setLocation(e.target.value)}
+            />
+          </div>
+        </div>
+
+        <div id="field-title">
           <Input
-            label="Área do terreno (m²)"
-            name="size"
-            type="number"
-            min="0"
-            step="0.01"
-            placeholder="Ex: 360"
-            value={size}
-            onChange={(e) => setSize(e.target.value)}
+            label="Título"
+            name="title"
+            required
+            placeholder={TITLE_PLACEHOLDERS[propertyType]}
+            value={title}
+            error={fieldErrors.title}
+            onChange={(e) => setTitle(e.target.value)}
+            autoFocus={isNew}
           />
+          {titleSuggestion && title.trim() !== titleSuggestion && (
+            <button
+              type="button"
+              onClick={() => setTitle(titleSuggestion)}
+              className="mt-1.5 text-xs font-medium text-blue-600 hover:text-blue-800"
+            >
+              Usar sugestão: “{titleSuggestion}”
+            </button>
+          )}
+        </div>
+
+        {isLand ? (
+          <div id="field-size">
+            <Input
+              label="Área do terreno (m²)"
+              name="size"
+              type="number"
+              min="0"
+              step="0.01"
+              required
+              placeholder="Ex: 360"
+              value={size}
+              error={fieldErrors.size}
+              onChange={(e) => setSize(e.target.value)}
+            />
+          </div>
         ) : (
           <div className="grid gap-4 sm:grid-cols-4">
             <Input label="Quartos" name="rooms" type="number" min="0" value={rooms} onChange={(e) => setRooms(e.target.value)} />
@@ -334,18 +525,45 @@ export function PropertyForm({ property, onSubmit, onCancel, onPropertyChange, l
           </div>
         )}
 
-        <Textarea
-          label="Descrição"
-          name="description"
-          placeholder={DESCRIPTION_PLACEHOLDERS[propertyType]}
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-        />
+        <div>
+          <Textarea
+            label="Descrição"
+            name="description"
+            placeholder={DESCRIPTION_PLACEHOLDERS[propertyType]}
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+          />
+          {(isLand ? LAND_TAGS : RESIDENTIAL_TAGS).length > 0 && (
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              <span className="text-xs text-slate-500">Destaques:</span>
+              {(isLand ? LAND_TAGS : RESIDENTIAL_TAGS).map((tag) => (
+                <button
+                  key={tag}
+                  type="button"
+                  onClick={() => appendTag(tag)}
+                  className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-700 hover:bg-blue-100 hover:text-blue-800"
+                >
+                  + {tag}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </section>
 
-      {property?.id && (
+      {property?.id && !justCreated && (
         <section className="rounded-xl border border-blue-200 bg-blue-50/60 p-4">
-          <h3 className="text-sm font-semibold text-blue-900">Performance nos últimos 7 dias</h3>
+          <div className="flex flex-wrap items-start justify-between gap-2">
+            <h3 className="text-sm font-semibold text-blue-900">Performance nos últimos 7 dias</h3>
+            <a
+              href={propertyPublicUrl(property.id)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs font-semibold text-blue-700 hover:text-blue-900"
+            >
+              Ver no site ↗
+            </a>
+          </div>
           {property.stats && (property.stats.views_7d > 0 || property.stats.whatsapp_clicks_7d > 0) ? (
             <dl className="mt-2 grid gap-2 text-sm sm:grid-cols-3">
               <div>
@@ -378,16 +596,29 @@ export function PropertyForm({ property, onSubmit, onCancel, onPropertyChange, l
         onChange={property?.id ? handleImagesChange : undefined}
       />
 
-      <div className="flex justify-end gap-2 border-t border-slate-100 pt-4">
+      {photoError && (
+        <p className="rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700">{photoError}</p>
+      )}
+      </div>
+
+      <div className="sticky bottom-0 -mx-5 flex justify-end gap-2 border-t border-slate-100 bg-white/95 px-5 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur supports-[backdrop-filter]:bg-white/90">
         <button type="button" onClick={onCancel} disabled={isSaving} className="rounded-lg px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100">
-          Cancelar
+          {justCreated ? 'Concluir' : 'Cancelar'}
         </button>
         <button
           type="submit"
           disabled={isSaving || !canSubmitAsAdmin || !canSubmitAsAgent}
           className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
         >
-          {isSaving ? 'Salvando…' : property ? 'Salvar alterações' : 'Criar imóvel'}
+          {isSaving
+            ? uploadingPhotos
+              ? 'Enviando fotos…'
+              : 'Salvando…'
+            : justCreated || !isNew
+              ? 'Salvar alterações'
+              : pendingPhotos.length > 0
+                ? `Criar com ${pendingPhotos.length} foto(s)`
+                : 'Criar imóvel'}
         </button>
       </div>
     </form>

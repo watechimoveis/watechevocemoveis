@@ -26,6 +26,7 @@ export function propertyWhatsAppMessage(property: {
   location?: string | null
   price?: number | null
   listing_type?: ListingType
+  property_type?: string
   agent_name?: string | null
 }): string {
   const title = property.title || 'imóvel'
@@ -38,8 +39,17 @@ export function propertyWhatsAppMessage(property: {
     ? `Olá, ${property.agent_name.trim()}!`
     : 'Olá!'
 
+  const typeLabel =
+    property.property_type === 'land'
+      ? 'Terreno'
+      : property.property_type === 'house'
+        ? 'Casa'
+        : property.property_type === 'apartment'
+          ? 'Apartamento'
+          : null
+
   const lines = [
-    `${greeting} Tenho interesse no imóvel "${title}"${location}.`,
+    `${greeting} Tenho interesse no ${typeLabel ? `${typeLabel.toLowerCase()} ` : ''}"${title}"${location}.`,
     price ? `Valor: ${price}.` : null,
     property.id ? `Link: ${window.location.origin}/imovel/${property.id}` : null,
     'Poderia me passar mais informações ou agendar uma visita?',

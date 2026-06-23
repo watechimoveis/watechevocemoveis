@@ -64,6 +64,8 @@ export function PropertyFilters({
     setFiltersOpen(false)
   }
 
+  const hideRoomsFilter = draft.category === 'land'
+
   const filterFields = (
     <div className="grid grid-cols-2 gap-3 lg:grid-cols-6 lg:items-end">
       <PriceInput
@@ -78,12 +80,14 @@ export function PropertyFilters({
         digits={draft.maxPrice}
         onChange={(v) => setField('maxPrice', v)}
       />
-      <SelectField
-        label="Quartos"
-        value={draft.minRooms}
-        onChange={(v) => setField('minRooms', v)}
-        options={ROOM_OPTIONS}
-      />
+      {!hideRoomsFilter && (
+        <SelectField
+          label="Quartos"
+          value={draft.minRooms}
+          onChange={(v) => setField('minRooms', v)}
+          options={ROOM_OPTIONS}
+        />
+      )}
       <FilterInput
         label="Área mín."
         placeholder="Ex.: 60"
@@ -263,12 +267,14 @@ export function PropertyFilters({
             digits={draft.maxPrice}
             onChange={(v) => setField('maxPrice', v)}
           />
-          <SelectField
-            label="Quartos"
-            value={draft.minRooms}
-            onChange={(v) => setField('minRooms', v)}
-            options={ROOM_OPTIONS}
-          />
+          {!hideRoomsFilter && (
+            <SelectField
+              label="Quartos"
+              value={draft.minRooms}
+              onChange={(v) => setField('minRooms', v)}
+              options={ROOM_OPTIONS}
+            />
+          )}
           <FilterInput
             label="Área mín."
             placeholder="Ex.: 60"

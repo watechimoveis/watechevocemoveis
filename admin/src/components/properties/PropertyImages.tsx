@@ -4,6 +4,10 @@ import { deletePropertyImage, uploadPropertyImages } from '../../services/proper
 import type { Property, PropertyImage } from '../../types/property'
 import { HttpError } from '../../services/api'
 
+const MAX_PHOTOS = 15
+const MAX_BYTES = 5 * 1024 * 1024
+const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp']
+
 interface PropertyImagesProps {
   property?: Property | null
   pendingFiles?: File[]
@@ -20,10 +24,13 @@ export function PropertyImages({
   const inputRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
+  const [dragOver, setDragOver] = useState(false)
   const [previews, setPreviews] = useState<string[]>([])
 
   const savedImages = property?.images ?? []
   const isDraft = !property?.id
+  const totalCount = savedImages.length + pendingFiles.length
+  const atLimit = totalCount >= MAX_PHOTOS
 
   useEffect(() => {
     if (!isDraft || pendingFiles.length === 0) {
@@ -35,29 +42,75 @@ export function PropertyImages({
     return () => urls.forEach((url) => URL.revokeObjectURL(url))
   }, [isDraft, pendingFiles])
 
-  async function handleFiles(selected: FileList | null) {
-    if (!selected?.length) return
-    const files = Array.from(selected)
+  function validateFiles(files: File[]): { valid: File[]; message?: string } {
+    const remaining = MAX_PHOTOS - totalCount
+    if (remaining <= 0) {
+      return { valid: [], message: `Limite de ${MAX_PHOTOS} fotos por anúncio.` }
+    }
+
+    const valid: File[] = []
+    const rejected: string[] = []
+
+    for (const file of files.slice(0, remaining)) {
+      if (!ACCEPTED_TYPES.includes(file.type)) {
+        rejected.push(`${file.name}: formato não suportado`)
+        continue
+      }
+      if (file.size > MAX_BYTES) {
+        rejected.push(`${file.name}: maior que 5MB`)
+        continue
+      }
+      valid.push(file)
+    }
+
+    if (files.length > remaining) {
+      rejected.push(`Só mais ${remaining} foto(s) permitida(s)`)
+    }
+
+    return {
+      valid,
+      message: rejected.length ? rejected.slice(0, 2).join(' · ') : undefined,
+    }
+  }
+
+  async function addFiles(files: File[]) {
+    if (!files.length) return
+    const { valid, message } = validateFiles(files)
+    if (message) setError(message)
+    if (!valid.length) return
+
+    setError('')
 
     if (isDraft) {
-      onPendingChange?.([...pendingFiles, ...files])
-      if (inputRef.current) inputRef.current.value = ''
+      onPendingChange?.([...pendingFiles, ...valid])
       return
     }
 
     if (!property || !onChange) return
 
     setUploading(true)
-    setError('')
     try {
-      const uploaded = await uploadPropertyImages(property.id, files)
+      const uploaded = await uploadPropertyImages(property.id, valid)
       onChange([...savedImages, ...uploaded])
     } catch (err) {
       setError(err instanceof HttpError ? err.message : 'Erro ao enviar fotos.')
     } finally {
       setUploading(false)
-      if (inputRef.current) inputRef.current.value = ''
     }
+  }
+
+  async function handleFiles(selected: FileList | null) {
+    if (!selected?.length) return
+    await addFiles(Array.from(selected))
+    if (inputRef.current) inputRef.current.value = ''
+  }
+
+  function handleDrop(e: React.DragEvent) {
+    e.preventDefault()
+    setDragOver(false)
+    if (atLimit || uploading) return
+    const files = Array.from(e.dataTransfer.files).filter((f) => f.type.startsWith('image/'))
+    void addFiles(files)
   }
 
   function removePending(index: number) {
@@ -75,7 +128,7 @@ export function PropertyImages({
     }
   }
 
-  const hasPhotos = savedImages.length > 0 || pendingFiles.length > 0
+  const hasPhotos = totalCount > 0
 
   return (
     <section className="space-y-3 border-t border-slate-100 pt-5">
@@ -83,18 +136,20 @@ export function PropertyImages({
         <div>
           <h3 className="text-sm font-semibold text-slate-900">Fotos</h3>
           <p className="text-xs text-slate-500">
-            JPG, PNG ou WebP — até 5MB cada
-            {isDraft && pendingFiles.length > 0 ? ` · ${pendingFiles.length} selecionada(s)` : ''}
+            JPG, PNG ou WebP · até 5MB · máx. {MAX_PHOTOS} fotos
+            {totalCount > 0 ? ` · ${totalCount}/${MAX_PHOTOS}` : ''}
           </p>
         </div>
-        <button
-          type="button"
-          disabled={uploading}
-          onClick={() => inputRef.current?.click()}
-          className="shrink-0 rounded-lg bg-slate-100 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-200 disabled:opacity-50"
-        >
-          {uploading ? 'Enviando…' : '+ Adicionar fotos'}
-        </button>
+        {!atLimit && (
+          <button
+            type="button"
+            disabled={uploading}
+            onClick={() => inputRef.current?.click()}
+            className="shrink-0 rounded-lg bg-slate-100 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-200 disabled:opacity-50"
+          >
+            {uploading ? 'Enviando…' : '+ Adicionar'}
+          </button>
+        )}
         <input
           ref={inputRef}
           type="file"
@@ -105,9 +160,9 @@ export function PropertyImages({
         />
       </div>
 
-      {isDraft && (
-        <p className="text-xs text-slate-500">
-          Selecione agora — as fotos serão enviadas automaticamente ao criar o anúncio.
+      {isDraft && !hasPhotos && (
+        <p className="text-xs text-amber-700">
+          Anúncios com fotos recebem mais cliques no site — recomendamos pelo menos 3 imagens.
         </p>
       )}
 
@@ -116,35 +171,65 @@ export function PropertyImages({
       {!hasPhotos ? (
         <button
           type="button"
-          disabled={uploading}
+          disabled={uploading || atLimit}
           onClick={() => inputRef.current?.click()}
-          className="flex w-full flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-200 py-8 text-sm text-slate-500 transition hover:border-blue-300 hover:bg-blue-50/50 hover:text-blue-700"
+          onDragOver={(e) => {
+            e.preventDefault()
+            setDragOver(true)
+          }}
+          onDragLeave={() => setDragOver(false)}
+          onDrop={handleDrop}
+          className={`flex w-full flex-col items-center justify-center rounded-xl border-2 border-dashed py-10 text-sm transition ${
+            dragOver
+              ? 'border-blue-400 bg-blue-50 text-blue-700'
+              : 'border-slate-200 text-slate-500 hover:border-blue-300 hover:bg-blue-50/50 hover:text-blue-700'
+          }`}
         >
-          <span className="text-2xl">📷</span>
-          <span className="mt-2 font-medium">Clique para adicionar fotos</span>
+          <span className="text-3xl">📷</span>
+          <span className="mt-2 font-medium">Arraste fotos ou clique para selecionar</span>
           <span className="mt-1 text-xs text-slate-400">A primeira foto será a capa do anúncio</span>
         </button>
       ) : (
-        <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
-          {savedImages.map((image, index) => (
-            <PhotoTile
-              key={image.id}
-              src={mediaUrl(image.url)}
-              alt={`Foto ${index + 1}`}
-              isCover={index === 0}
-              onRemove={() => handleRemove(image.id)}
-            />
-          ))}
-          {previews.map((src, index) => (
-            <PhotoTile
-              key={src}
-              src={src}
-              alt={`Prévia ${index + 1}`}
-              isCover={savedImages.length === 0 && index === 0}
-              pending
-              onRemove={() => removePending(index)}
-            />
-          ))}
+        <div
+          onDragOver={(e) => {
+            e.preventDefault()
+            if (!atLimit) setDragOver(true)
+          }}
+          onDragLeave={() => setDragOver(false)}
+          onDrop={handleDrop}
+          className={`rounded-xl p-1 transition ${dragOver ? 'bg-blue-50 ring-2 ring-blue-300 ring-offset-2' : ''}`}
+        >
+          <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+            {savedImages.map((image, index) => (
+              <PhotoTile
+                key={image.id}
+                src={mediaUrl(image.url)}
+                alt={`Foto ${index + 1}`}
+                isCover={index === 0}
+                onRemove={() => handleRemove(image.id)}
+              />
+            ))}
+            {previews.map((src, index) => (
+              <PhotoTile
+                key={src}
+                src={src}
+                alt={`Prévia ${index + 1}`}
+                isCover={savedImages.length === 0 && index === 0}
+                pending
+                onRemove={() => removePending(index)}
+              />
+            ))}
+          </div>
+          {!atLimit && (
+            <button
+              type="button"
+              disabled={uploading}
+              onClick={() => inputRef.current?.click()}
+              className="mt-2 w-full rounded-lg border border-dashed border-slate-200 py-2 text-xs font-medium text-slate-500 hover:border-blue-300 hover:text-blue-700"
+            >
+              + Adicionar mais fotos
+            </button>
+          )}
         </div>
       )}
     </section>
@@ -173,8 +258,8 @@ function PhotoTile({
         </span>
       )}
       {pending && (
-        <span className="absolute left-1.5 bottom-1.5 rounded bg-slate-900/70 px-1.5 py-0.5 text-[10px] font-medium text-white">
-          Pendente
+        <span className="absolute bottom-1.5 left-1.5 rounded bg-slate-900/70 px-1.5 py-0.5 text-[10px] font-medium text-white">
+          Aguardando
         </span>
       )}
       <button

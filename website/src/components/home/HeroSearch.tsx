@@ -58,6 +58,7 @@ export function HeroSearch({ draft, onChange, onSearch, loading }: HeroSearchPro
       minRooms: next === 'terrenos' ? '' : draft.minRooms,
     }
     onChange(nextDraft)
+    onSearch(nextDraft)
   }
 
   function handleSubmit(e: React.FormEvent) {

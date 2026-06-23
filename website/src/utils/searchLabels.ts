@@ -7,12 +7,18 @@ export interface ActiveFilter {
   label: string
 }
 
+function listingFilterLabel(state: SearchState): string {
+  if (state.listingType === 'rent') return 'Aluguéis'
+  if (state.category === 'residential') return `Imóveis · ${LISTING_LABELS.sale}`
+  return `Terrenos · ${LISTING_LABELS.sale}`
+}
+
 export function buildActiveFilters(state: SearchState): ActiveFilter[] {
   const filters: ActiveFilter[] = []
 
   filters.push({
     key: 'tipo',
-    label: LISTING_LABELS[state.listingType],
+    label: listingFilterLabel(state),
   })
 
   if (state.location.trim()) {

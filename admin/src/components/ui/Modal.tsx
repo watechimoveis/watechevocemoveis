@@ -37,7 +37,7 @@ export function Modal({ open, onClose, title, children, footer, wide }: ModalPro
         role="dialog"
         aria-modal="true"
         aria-labelledby="modal-title"
-        className={`relative flex max-h-[92dvh] w-full flex-col rounded-t-2xl bg-white shadow-xl lg:max-h-[90vh] lg:rounded-2xl ${wide ? 'lg:max-w-2xl' : 'lg:max-w-lg'}`}
+        className={`relative flex max-h-[92dvh] w-full flex-col rounded-t-2xl bg-white shadow-xl lg:max-h-[90vh] lg:rounded-2xl ${wide ? 'lg:max-w-3xl' : 'lg:max-w-lg'}`}
       >
         <div className="flex shrink-0 justify-center pt-2 lg:hidden">
           <div className="h-1 w-10 rounded-full bg-slate-200" aria-hidden="true" />

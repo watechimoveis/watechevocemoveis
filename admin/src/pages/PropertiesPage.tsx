@@ -12,6 +12,7 @@ import {
   updateProperty,
 } from '../services/propertiesService'
 import type { Property, PropertyPayload, PropertyStats } from '../types/property'
+import { PROPERTY_TYPE_LABELS } from '../types/property'
 import { formatPrice } from '../utils/format'
 import { formatWhatsAppPhone, getAgentInitials } from '../utils/agent'
 import { whatsappConversionRate } from '../utils/analytics'
@@ -130,13 +131,21 @@ export function PropertiesPage() {
       const created = await createProperty(payload)
       setSelected(created)
       setModalMode('edit')
-      setToast('Anúncio criado — adicione fotos para publicar no site')
       await load(page)
       return created
     } catch {
       setError('Erro ao salvar anúncio.')
     } finally {
       setSubmitting(false)
+    }
+  }
+
+  function handleFormSuccess({ photosUploaded, isNew }: { property: Property; photosUploaded: number; isNew: boolean }) {
+    if (!isNew) return
+    if (photosUploaded > 0) {
+      setToast(`Anúncio publicado no site com ${photosUploaded} foto(s)`)
+    } else {
+      setToast('Anúncio criado — adicione fotos para destacar no site')
     }
   }
 
@@ -345,7 +354,11 @@ export function PropertiesPage() {
       <Modal
         open={modalMode === 'create' || modalMode === 'edit'}
         onClose={closeModal}
-        title={modalMode === 'edit' ? 'Editar anúncio' : 'Novo anúncio'}
+        title={
+          modalMode === 'edit' && selected
+            ? `Editar · ${PROPERTY_TYPE_LABELS[selected.property_type] || 'Imóvel'}`
+            : 'Novo anúncio'
+        }
         wide
       >
         <PropertyForm
@@ -353,6 +366,7 @@ export function PropertiesPage() {
           onSubmit={handleSave}
           onCancel={closeModal}
           onPropertyChange={setSelected}
+          onSuccess={handleFormSuccess}
           loading={submitting}
         />
       </Modal>

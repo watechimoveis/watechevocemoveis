@@ -2,7 +2,8 @@ import { Link } from 'react-router-dom'
 import { mediaUrl } from '../../lib/api'
 import { recordPropertyEvent } from '../../services/analyticsService'
 import type { Property } from '../../types/property'
-import { getCoverImage, LISTING_LABELS, PROPERTY_TYPE_LABELS } from '../../types/property'
+import { getCoverImage, LISTING_LABELS } from '../../types/property'
+import { formatPricePerSqm, normalizePropertyType, propertyHighlights, propertyTypeLabel } from '../../utils/propertyDisplay'
 import { getAgentFirstName } from '../../utils/agent'
 import { buildWhatsAppUrl, formatPrice, propertyWhatsAppMessage } from '../../utils/format'
 import { WhatsAppButton } from '../ui/WhatsAppButton'
@@ -20,6 +21,8 @@ export function PropertyCard({ property }: PropertyCardProps) {
   const creciLabel = property.agent_creci ? `CRECI ${property.agent_creci}` : null
   const cover = getCoverImage(property)
   const coverSrc = mediaUrl(cover)
+  const type = normalizePropertyType(property.property_type)
+  const sqmPrice = type === 'land' ? formatPricePerSqm(property.price, property.size) : null
 
   return (
     <article className="flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:shadow-md">
@@ -40,12 +43,14 @@ export function PropertyCard({ property }: PropertyCardProps) {
             </div>
           )}
         </div>
-        <span className="absolute left-2 top-2 rounded-md bg-blue-600 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-white">
-          {PROPERTY_TYPE_LABELS[property.property_type] || 'Imóvel'}
-        </span>
-        <span className="absolute left-2 top-8 rounded-md bg-slate-900/70 px-2 py-0.5 text-[11px] font-medium text-white">
-          {LISTING_LABELS[property.listing_type]}
-        </span>
+        <div className="absolute left-2 top-2 flex flex-wrap gap-1">
+          <span className="rounded-md bg-blue-600 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-white">
+            {propertyTypeLabel(type)}
+          </span>
+          <span className="rounded-md bg-slate-900/70 px-2 py-0.5 text-[11px] font-medium text-white">
+            {LISTING_LABELS[property.listing_type]}
+          </span>
+        </div>
         {property.images.length > 1 && (
           <span className="absolute right-2 top-2 rounded-md bg-black/65 px-2 py-0.5 text-[11px] font-medium text-white">
             {property.images.length} fotos
@@ -58,6 +63,9 @@ export function PropertyCard({ property }: PropertyCardProps) {
           <p className="text-xl font-bold text-slate-900">
             {formatPrice(property.price, property.listing_type)}
           </p>
+          {sqmPrice && (
+            <p className="text-xs font-medium text-slate-500">{sqmPrice}</p>
+          )}
           <h3 className="mt-1 line-clamp-1 text-sm font-semibold text-slate-800">
             {property.title || 'Imóvel disponível'}
           </h3>
@@ -92,13 +100,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
 }
 
 function PropertyFeatures({ property }: { property: Property }) {
-  const isLand = property.property_type === 'land'
-  const features = [
-    !isLand && property.rooms != null && `${property.rooms} qt`,
-    !isLand && property.bathrooms != null && `${property.bathrooms} bh`,
-    property.size != null && `${property.size} m²`,
-    !isLand && property.parking != null && `${property.parking} vg`,
-  ].filter(Boolean)
+  const features = propertyHighlights(property)
 
   if (features.length === 0) return null
 

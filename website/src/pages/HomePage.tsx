@@ -1,10 +1,10 @@
 import { PropertyCard } from '../components/properties/PropertyCard'
 import { HomeHero } from '../components/home/HomeHero'
-import { BRAND, LISTING_EMPTY_LABEL } from '../lib/brand'
-import type { SearchState } from '../hooks/usePropertySearch'
+import { BRAND } from '../lib/brand'
 import { usePageTitle } from '../hooks/usePageTitle'
 import { usePropertySearch } from '../hooks/usePropertySearch'
 import { buildActiveFilters } from '../utils/searchLabels'
+import { hasActiveSearchFilters, searchResultsEmptyHint, searchResultsTitle } from '../utils/searchCopy'
 
 export function HomePage() {
   usePageTitle(null)
@@ -32,6 +32,7 @@ export function HomePage() {
   return (
     <div className="min-h-screen bg-slate-50">
       <HomeHero
+        applied={applied}
         draft={draft}
         onChange={setDraft}
         onSearch={applySearch}
@@ -42,12 +43,12 @@ export function HomePage() {
       <section id="imoveis" className="mx-auto max-w-7xl scroll-mt-8 px-4 py-12 sm:px-6 lg:px-8">
         <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-slate-900">Resultados</h2>
+            <h2 className="text-2xl font-bold text-slate-900">{searchResultsTitle(applied)}</h2>
             <p className="mt-1 text-sm text-slate-500">
               {loading
                 ? 'Carregando anúncios…'
                 : total === 0
-                  ? `Nenhum imóvel ${LISTING_EMPTY_LABEL[applied.listingType]}`
+                  ? searchResultsEmptyHint(applied)
                   : `${total} ${total === 1 ? 'anúncio encontrado' : 'anúncios encontrados'}`}
             </p>
           </div>
@@ -105,7 +106,7 @@ export function HomePage() {
           <div className="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-16 text-center">
             <p className="text-lg font-medium text-slate-800">Nenhum anúncio encontrado</p>
             <p className="mt-2 text-sm text-slate-500">
-              {hasActiveSearch(applied)
+              {hasActiveSearchFilters(applied)
                 ? 'Tente ampliar a busca ou ajustar os filtros acima.'
                 : 'Em breve novos terrenos e imóveis com contato direto ao corretor.'}
             </p>
@@ -174,16 +175,4 @@ export function HomePage() {
   function onRemoveFilter(filter: { key: string }) {
     removeFilter(filter.key)
   }
-}
-
-function hasActiveSearch(applied: SearchState) {
-  return Boolean(
-    applied.location.trim() ||
-      applied.minPrice ||
-      applied.maxPrice ||
-      applied.minRooms ||
-      applied.minSize ||
-      applied.sort !== 'recent' ||
-      applied.listingType !== 'sale',
-  )
 }

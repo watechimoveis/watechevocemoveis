@@ -2,8 +2,10 @@ import heroBg from '../../assets/bgterrenos01.png'
 import { HomeHeader } from './HomeHeader'
 import { HeroSearch } from './HeroSearch'
 import type { SearchState } from '../../hooks/usePropertySearch'
+import { heroCopy } from '../../utils/searchCopy'
 
 interface HomeHeroProps {
+  applied: SearchState
   draft: SearchState
   onChange: (draft: SearchState) => void
   onSearch: (draft?: SearchState) => void
@@ -17,8 +19,9 @@ const TRUST_ITEMS = [
   { icon: DocIcon, label: 'Documentação verificada' },
 ]
 
-export function HomeHero({ draft, onChange, onSearch, loading, total }: HomeHeroProps) {
+export function HomeHero({ applied, draft, onChange, onSearch, loading, total }: HomeHeroProps) {
   const countLabel = total != null && total > 0 ? `${total}+` : '—'
+  const copy = heroCopy(applied)
 
   return (
     <section className="relative min-h-[100dvh] overflow-hidden bg-slate-950">
@@ -37,12 +40,11 @@ export function HomeHero({ draft, onChange, onSearch, loading, total }: HomeHero
         <div className="grid flex-1 items-center gap-10 lg:grid-cols-[1fr_auto] lg:gap-16">
           <div className="max-w-xl">
             <h1 className="text-3xl font-bold leading-tight tracking-tight text-white sm:text-4xl lg:text-5xl">
-              Encontre o terreno ideal para{' '}
-              <span className="text-amber-400">realizar seus planos.</span>
+              {copy.title}{' '}
+              <span className="text-amber-400">{copy.highlight}</span>
             </h1>
             <p className="mt-4 text-base leading-relaxed text-white/90 sm:text-lg">
-              As melhores oportunidades de terrenos para investir ou construir — com contato direto ao
-              corretor responsável.
+              {copy.subtitle}
             </p>
 
             <ul className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:gap-6">

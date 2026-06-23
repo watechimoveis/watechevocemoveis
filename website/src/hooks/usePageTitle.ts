@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import type { Property } from '../types/property'
 import { getCoverImage } from '../types/property'
+import { formatPricePerSqm, normalizePropertyType, propertyTypeLabel } from '../utils/propertyDisplay'
 import { mediaUrl } from '../lib/api'
 import { formatPrice } from '../utils/format'
 
@@ -28,10 +29,15 @@ function removeMeta(name: string, property?: string) {
 }
 
 function buildDescription(property: Property): string {
+  const type = normalizePropertyType(property.property_type)
+  const isLand = type === 'land'
+  const sqm = isLand ? formatPricePerSqm(property.price, property.size) : null
   const parts = [
+    propertyTypeLabel(type),
     formatPrice(property.price, property.listing_type),
+    sqm,
     property.location,
-    property.rooms != null ? `${property.rooms} quartos` : null,
+    !isLand && property.rooms != null ? `${property.rooms} quartos` : null,
     property.size != null ? `${property.size} m²` : null,
   ].filter(Boolean)
   const summary = parts.join(' · ')

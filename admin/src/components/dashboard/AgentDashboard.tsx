@@ -4,6 +4,7 @@ import { mediaUrl } from '../../lib/api'
 import { useAuth } from '../../hooks/useAuth'
 import { listProperties } from '../../services/propertiesService'
 import type { Property } from '../../types/property'
+import { LISTING_LABELS, PROPERTY_TYPE_LABELS } from '../../types/property'
 import { whatsappConversionRate } from '../../utils/analytics'
 import { formatWhatsAppPhone, getAgentInitials } from '../../utils/agent'
 import { formatPrice } from '../../utils/format'
@@ -121,7 +122,12 @@ export function AgentDashboard() {
                       {property.title || 'Sem título'}
                     </p>
                     <p className="truncate text-sm text-slate-500">
-                      {property.location || 'Sem local'} · {formatPrice(property.price)}
+                      {PROPERTY_TYPE_LABELS[property.property_type] || 'Imóvel'}
+                      {' · '}
+                      {property.listing_type === 'rent' ? LISTING_LABELS.rent : LISTING_LABELS.sale}
+                      {property.location ? ` · ${property.location}` : ''}
+                      {' · '}
+                      {formatPrice(property.price)}
                     </p>
                     {(() => {
                       const rate = property.stats ? whatsappConversionRate(property.stats) : null
@@ -133,8 +139,8 @@ export function AgentDashboard() {
                       )
                     })()}
                   </div>
-                  <span className="text-xs font-medium text-slate-400">
-                    {property.listing_type === 'rent' ? 'Aluguel' : 'Compra'}
+                  <span className="shrink-0 text-xs font-medium text-slate-400">
+                    {PROPERTY_TYPE_LABELS[property.property_type]?.slice(0, 3) || 'Imv'}
                   </span>
                 </Link>
               </li>
