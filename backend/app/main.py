@@ -66,10 +66,15 @@ def create_app() -> FastAPI:
 
     @app.get("/health")
     def health():
-        return {
-            "status": "ok",
-            "storage": "supabase" if settings.use_supabase_storage else "local",
-        }
+        storage = "supabase" if settings.use_supabase_storage else "local"
+        payload: dict[str, str] = {"status": "ok", "storage": storage}
+        if settings.app_env == "production" and not settings.use_supabase_storage:
+            payload["photos"] = "ephemeral"
+            payload["hint"] = (
+                "Defina SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY na API; "
+                "fotos em disco local somem após restart/redeploy no Render."
+            )
+        return payload
 
     return app
 

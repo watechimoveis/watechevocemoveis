@@ -58,6 +58,13 @@ def test_rejects_oversized_file(local_storage, monkeypatch):
     assert exc.value.code == "FILE_TOO_LARGE"
 
 
+def test_production_requires_supabase_storage(local_storage, monkeypatch):
+    monkeypatch.setattr(settings, "app_env", "production")
+    with pytest.raises(AppError) as exc:
+        image_storage.save_property_image(uuid.uuid4(), _upload_file(TINY_PNG, "image/png"))
+    assert exc.value.code == "STORAGE_NOT_CONFIGURED"
+
+
 def test_delete_property_images_removes_folder(local_storage):
     property_id = uuid.uuid4()
     image_storage.save_property_image(property_id, _upload_file(TINY_PNG, "image/png"))

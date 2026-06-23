@@ -40,7 +40,23 @@ def _read_and_validate(file: UploadFile) -> tuple[bytes, str, str]:
     return content, content_type, extension
 
 
+def _ensure_persistent_storage() -> None:
+    if settings.app_env != "production":
+        return
+    if settings.use_supabase_storage:
+        return
+    raise AppError(
+        code="STORAGE_NOT_CONFIGURED",
+        message=(
+            "Fotos indisponíveis: configure SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY "
+            "no serviço da API (Render) e use o bucket público property-images."
+        ),
+        status_code=503,
+    )
+
+
 def save_property_image(property_id: uuid.UUID, file: UploadFile) -> str:
+    _ensure_persistent_storage()
     content, content_type, extension = _read_and_validate(file)
     filename = f"{uuid.uuid4()}{extension}"
 
