@@ -1,6 +1,12 @@
 # Blueprint Render — W.A.Techevoceimoveis
 # Deploy: Render Dashboard → New → Blueprint → repo GitHub
-# Preencher no 1º deploy: DATABASE_URL e ADMIN_PASSWORD (watech-api)
+#
+# Obrigatório no watech-api (Environment):
+#   DATABASE_URL — URI do Supabase (Session pooler, ?sslmode=require)
+#   ADMIN_PASSWORD — senha do admin
+#
+# Se a API retorna 500: confira Logs do watech-api e /health (campo "database").
+# Erro "tenant/user not found" = DATABASE_URL desatualizado — copie de novo no Supabase.
 
 services:
   - type: web
@@ -9,8 +15,8 @@ services:
     plan: free
     region: oregon
     rootDir: backend
-    buildCommand: pip install -r requirements.txt && alembic upgrade head
-    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    buildCommand: pip install -r requirements.txt
+    startCommand: alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /health
     envVars:
       - key: PYTHON_VERSION

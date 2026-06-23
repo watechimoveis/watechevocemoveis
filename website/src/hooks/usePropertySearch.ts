@@ -51,6 +51,8 @@ export function usePropertySearch() {
       setPages(0)
       if (err instanceof TypeError) {
         setError('Não foi possível conectar ao servidor. Aguarde alguns segundos e tente novamente.')
+      } else if (err instanceof Error && err.message.includes('carregar')) {
+        setError('Erro no servidor ao buscar imóveis. Tente novamente em instantes.')
       } else {
         setError('Não foi possível carregar os imóveis.')
       }

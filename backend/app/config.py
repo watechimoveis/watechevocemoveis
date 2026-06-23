@@ -19,6 +19,13 @@ class Settings(BaseSettings):
     storage_bucket: str = "property-images"
 
     @property
+    def normalized_database_url(self) -> str:
+        url = self.database_url.strip()
+        if url.startswith("postgres://"):
+            url = "postgresql://" + url[len("postgres://") :]
+        return url
+
+    @property
     def use_supabase_storage(self) -> bool:
         return bool(self.supabase_url.strip() and self.supabase_service_role_key.strip())
 
