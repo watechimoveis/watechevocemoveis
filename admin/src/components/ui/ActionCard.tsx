@@ -19,10 +19,10 @@ export function ActionCard({ to, onClick, title, description, icon, variant = 'd
   const content = (
     <>
       <span className="text-2xl" aria-hidden="true">{icon}</span>
-      <h3 className={`mt-3 font-semibold ${variant === 'primary' ? 'text-white' : 'text-slate-900'}`}>
+      <h3 className={`mt-3 text-base font-semibold xl:text-lg ${variant === 'primary' ? 'text-white' : 'text-slate-900'}`}>
         {title}
       </h3>
-      <p className={`mt-1 text-sm ${variant === 'primary' ? 'text-blue-100' : 'text-slate-500'}`}>
+      <p className={`type-page-lead mt-1 ${variant === 'primary' ? 'text-blue-100' : 'text-slate-500'}`}>
         {description}
       </p>
     </>

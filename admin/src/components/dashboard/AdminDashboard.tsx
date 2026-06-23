@@ -37,8 +37,8 @@ export function AdminDashboard() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-semibold text-slate-900">Painel administrativo</h1>
-        <p className="mt-1 text-sm text-slate-500">Gerencie corretores e todos os anúncios do site</p>
+        <h1 className="type-page-title font-semibold text-slate-900">Painel administrativo</h1>
+        <p className="type-page-lead mt-1 text-slate-500">Gerencie corretores e todos os anúncios do site</p>
       </div>
 
       <div className="-mx-4 flex gap-3 overflow-x-auto scroll-snap-x px-4 pb-1 sm:mx-0 sm:grid sm:grid-cols-3 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-6">
@@ -51,7 +51,7 @@ export function AdminDashboard() {
       </div>
 
       <section>
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">Ações rápidas</h2>
+        <h2 className="type-section-label mb-3 font-semibold uppercase text-slate-500">Ações rápidas</h2>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <ActionCard
             to="/corretores?novo=1"
@@ -76,7 +76,7 @@ export function AdminDashboard() {
       </section>
 
       <section className="rounded-2xl border border-slate-200 bg-white p-5">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Opções avançadas</h2>
+        <h2 className="type-section-label font-semibold uppercase text-slate-500">Opções avançadas</h2>
         <ul className="mt-4 divide-y divide-slate-100">
           <AdvancedLink to="/corretores" title="Gerenciar corretores" desc="Editar, desativar ou redefinir senha" />
           <AdvancedLink to="/imoveis" title="Moderar anúncios" desc="Reatribuir corretor, editar ou remover imóveis" />
@@ -93,8 +93,8 @@ function StatCard({ label, value, highlight, className = '' }: { label: string; 
         highlight ? 'border-emerald-200 bg-emerald-50' : 'border-slate-200 bg-white'
       }`}
     >
-      <p className={`text-xs font-medium ${highlight ? 'text-emerald-700' : 'text-slate-500'}`}>{label}</p>
-      <p className={`mt-1 text-2xl font-bold ${highlight ? 'text-emerald-900' : 'text-slate-900'}`}>{value}</p>
+      <p className={`type-section-label font-medium ${highlight ? 'text-emerald-700' : 'text-slate-500'}`}>{label}</p>
+      <p className={`mt-1 text-2xl font-bold xl:text-3xl ${highlight ? 'text-emerald-900' : 'text-slate-900'}`}>{value}</p>
     </div>
   )
 }
@@ -105,7 +105,7 @@ function AdvancedLink({ to, title, desc }: { to: string; title: string; desc: st
       <Link to={to} className="flex items-center justify-between py-3 transition hover:text-blue-700">
         <div>
           <p className="font-medium text-slate-900">{title}</p>
-          <p className="text-sm text-slate-500">{desc}</p>
+          <p className="type-page-lead text-slate-500">{desc}</p>
         </div>
         <span className="text-slate-400">→</span>
       </Link>

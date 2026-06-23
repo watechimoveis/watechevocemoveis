@@ -37,9 +37,9 @@ export function AgentDashboard() {
               {getAgentInitials(user?.name)}
             </div>
             <div>
-              <p className="text-sm text-emerald-700">Olá, {user?.name?.split(' ')[0]}</p>
-              <h1 className="text-xl font-semibold text-slate-900">Publique seu anúncio</h1>
-              <p className="text-sm text-slate-500">
+              <p className="type-page-lead text-emerald-700">Olá, {user?.name?.split(' ')[0]}</p>
+              <h1 className="type-page-title font-semibold text-slate-900">Publique seu anúncio</h1>
+              <p className="type-page-lead text-slate-500">
                 Seus dados (CRECI e WhatsApp) são vinculados automaticamente
               </p>
             </div>
@@ -54,7 +54,7 @@ export function AgentDashboard() {
         </div>
 
         {user && (
-          <dl className="mt-4 grid gap-2 border-t border-emerald-100 pt-4 text-sm sm:grid-cols-2 lg:grid-cols-4">
+          <dl className="type-page-lead mt-4 grid gap-2 border-t border-emerald-100 pt-4 sm:grid-cols-2 lg:grid-cols-4">
             <div>
               <dt className="text-slate-500">CRECI</dt>
               <dd className="font-medium text-slate-800">{user.creci || '—'}</dd>
@@ -77,7 +77,7 @@ export function AgentDashboard() {
 
       <section>
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="font-semibold text-slate-900">Anúncios recentes</h2>
+          <h2 className="type-page-title text-lg font-semibold text-slate-900 xl:text-xl">Anúncios recentes</h2>
           {total > 5 && (
             <Link to="/imoveis" className="text-sm font-medium text-blue-600 hover:underline">
               Ver todos

@@ -171,10 +171,10 @@ export function PropertiesPage() {
     <div>
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-900">
+          <h1 className="type-page-title font-semibold text-slate-900">
             {isAdmin ? 'Todos os imóveis' : 'Meus anúncios'}
           </h1>
-          <p className="text-sm text-slate-500">
+          <p className="type-page-lead text-slate-500">
             {total} {total === 1 ? 'anúncio' : 'anúncios'}
             {!isAdmin && ' · publicados no site com seu perfil'}
           </p>
@@ -240,15 +240,15 @@ export function PropertiesPage() {
 
             {/* Tabela — desktop */}
             <div className="hidden overflow-x-auto lg:block">
-            <table className="w-full text-left text-sm">
+            <table className="type-table w-full text-left">
               <thead>
-                <tr className="border-b border-slate-100 bg-slate-50/80 text-xs uppercase tracking-wide text-slate-500">
-                  <th className="w-14 px-4 py-3 font-medium" />
-                  <th className="px-4 py-3 font-medium">Anúncio</th>
-                  <th className="px-4 py-3 font-medium">Preço</th>
-                  <th className="px-4 py-3 font-medium">Performance (7d)</th>
-                  {isAdmin && <th className="px-4 py-3 font-medium">Responsável</th>}
-                  <th className="px-4 py-3 font-medium text-right">Ações</th>
+                <tr className="type-table-head border-b border-slate-100 bg-slate-50/80 uppercase text-slate-500">
+                  <th className="w-14 px-4 py-3 font-medium xl:px-5 xl:py-4" />
+                  <th className="px-4 py-3 font-medium xl:px-5 xl:py-4">Anúncio</th>
+                  <th className="px-4 py-3 font-medium xl:px-5 xl:py-4">Preço</th>
+                  <th className="px-4 py-3 font-medium xl:px-5 xl:py-4">Performance (7d)</th>
+                  {isAdmin && <th className="px-4 py-3 font-medium xl:px-5 xl:py-4">Responsável</th>}
+                  <th className="px-4 py-3 text-right font-medium xl:px-5 xl:py-4">Ações</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -258,12 +258,12 @@ export function PropertiesPage() {
                     className="group cursor-pointer hover:bg-slate-50/80"
                     onClick={() => openEdit(property)}
                   >
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3 xl:px-5 xl:py-4">
                       {property.images?.[0] ? (
                         <img
                           src={mediaUrl(property.images[0].url)}
                           alt=""
-                          className="h-10 w-10 rounded-lg object-cover"
+                          className="h-10 w-10 rounded-lg object-cover xl:h-12 xl:w-12"
                         />
                       ) : (
                         <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100 text-slate-400">
@@ -271,11 +271,11 @@ export function PropertiesPage() {
                         </div>
                       )}
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3 xl:px-5 xl:py-4">
                       <p className="font-medium text-slate-900">
                         {property.title || <span className="italic text-slate-400">Sem título</span>}
                       </p>
-                      <p className="text-xs text-slate-500">
+                      <p className="type-meta text-slate-500">
                         {PROPERTY_TYPE_LABELS[property.property_type] || 'Imóvel'}
                         {' · '}
                         {LISTING_LABEL[property.listing_type] || 'Venda'}
@@ -285,25 +285,25 @@ export function PropertiesPage() {
                         )}
                       </p>
                     </td>
-                    <td className="px-4 py-3 font-medium text-slate-900">
+                    <td className="px-4 py-3 font-medium text-slate-900 xl:px-5 xl:py-4">
                       {formatPrice(property.price)}
                       {property.listing_type === 'rent' && (
-                        <span className="text-xs font-normal text-slate-500">/mês</span>
+                        <span className="type-meta font-normal text-slate-500">/mês</span>
                       )}
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3 xl:px-5 xl:py-4">
                       <PropertyPerformance stats={property.stats} />
                     </td>
                     {isAdmin && (
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-3 xl:px-5 xl:py-4">
                         {property.agent_name ? (
                           <div className="flex items-center gap-2">
-                            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-100 text-[10px] font-semibold text-blue-700">
+                            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-100 text-[0.65rem] font-semibold text-blue-700 xl:h-8 xl:w-8 xl:text-xs">
                               {getAgentInitials(property.agent_name)}
                             </span>
                             <div className="min-w-0">
                               <p className="truncate font-medium text-slate-800">{property.agent_name}</p>
-                              <p className="truncate text-xs text-slate-500">
+                              <p className="truncate type-meta text-slate-500">
                                 {formatWhatsAppPhone(property.agent_whatsapp)}
                               </p>
                             </div>
@@ -313,7 +313,7 @@ export function PropertiesPage() {
                         )}
                       </td>
                     )}
-                    <td className="px-4 py-3 text-right">
+                    <td className="px-4 py-3 text-right xl:px-5 xl:py-4">
                       <div className="flex justify-end gap-1">
                         <Button
                           variant="ghost"
@@ -413,7 +413,7 @@ function PropertyPerformance({ stats }: { stats?: PropertyStats }) {
   const rate = stats ? whatsappConversionRate(stats) : null
 
   return (
-    <div className="text-xs">
+    <div className="type-meta">
       <p className="font-medium text-slate-800">{views} views</p>
       <p className="text-slate-500">
         {clicks} WhatsApp{rate ? ` · ${rate}` : ''}

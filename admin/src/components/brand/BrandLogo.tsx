@@ -7,9 +7,9 @@ interface BrandLogoProps {
 }
 
 const sizeClasses = {
-  sm: 'text-sm',
-  md: 'text-base',
-  lg: 'text-2xl',
+  sm: 'text-sm xl:text-base',
+  md: 'text-base xl:text-lg',
+  lg: 'text-2xl xl:text-3xl',
 }
 
 export function BrandLogo({ size = 'md', variant = 'dark', showTagline = false }: BrandLogoProps) {
@@ -24,7 +24,7 @@ export function BrandLogo({ size = 'md', variant = 'dark', showTagline = false }
       </span>
       {showTagline && (
         <p
-          className={`mt-1 text-xs font-medium uppercase tracking-wide ${
+          className={`mt-1 type-section-label font-medium uppercase ${
             variant === 'light' ? 'text-slate-300' : 'text-slate-500'
           }`}
         >

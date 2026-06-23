@@ -6,9 +6,82 @@
   --bottom-nav-height: 4.5rem;
 }
 
+/* Escala fluida só em telas grandes — mobile/tablet intactos */
+@media (min-width: 1280px) {
+  html {
+    font-size: clamp(16px, 15px + 0.22vw, 18.5px);
+  }
+}
+
+@media (min-width: 1536px) {
+  html {
+    font-size: clamp(17px, 16px + 0.28vw, 20px);
+  }
+}
+
+@media (min-width: 1920px) {
+  html {
+    font-size: clamp(18px, 17px + 0.3vw, 21px);
+  }
+}
+
 body {
   @apply bg-slate-50 text-slate-900 antialiased;
   -webkit-tap-highlight-color: transparent;
+}
+
+@utility type-page-title {
+  font-size: clamp(1.5rem, 1.2rem + 0.55vw, 2.25rem);
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+@utility type-page-lead {
+  font-size: clamp(0.875rem, 0.82rem + 0.18vw, 1.0625rem);
+  line-height: 1.5;
+}
+
+@utility type-section-label {
+  font-size: clamp(0.75rem, 0.72rem + 0.12vw, 0.875rem);
+  line-height: 1.4;
+  letter-spacing: 0.06em;
+}
+
+@utility type-table {
+  font-size: clamp(0.875rem, 0.83rem + 0.14vw, 1.0625rem);
+  line-height: 1.45;
+}
+
+@utility type-table-head {
+  font-size: clamp(0.75rem, 0.72rem + 0.1vw, 0.875rem);
+  line-height: 1.35;
+  letter-spacing: 0.05em;
+}
+
+@utility type-meta {
+  font-size: clamp(0.75rem, 0.73rem + 0.08vw, 0.875rem);
+  line-height: 1.4;
+}
+
+@utility admin-container {
+  @apply mx-auto w-full max-w-6xl px-4 sm:px-6;
+  max-width: min(100%, 72rem);
+}
+
+@media (min-width: 1280px) {
+  .admin-container {
+    max-width: min(100%, 80rem);
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
+
+@media (min-width: 1536px) {
+  .admin-container {
+    max-width: min(100%, 88rem);
+    padding-left: 2.5rem;
+    padding-right: 2.5rem;
+  }
 }
 
 .pb-bottom-nav {

@@ -126,8 +126,8 @@ export function AgentsPage() {
     <div>
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-900">Corretores</h1>
-          <p className="text-sm text-slate-500">
+          <h1 className="type-page-title font-semibold text-slate-900">Corretores</h1>
+          <p className="type-page-lead text-slate-500">
             Cadastre corretores com nome, CRECI e WhatsApp. Os dados são vinculados automaticamente aos imóveis.
           </p>
         </div>
@@ -190,9 +190,9 @@ export function AgentsPage() {
             </ul>
 
             <div className="hidden overflow-x-auto lg:block">
-            <table className="w-full text-left text-sm">
+            <table className="type-table w-full text-left">
               <thead>
-                <tr className="border-b border-slate-100 bg-slate-50/80 text-xs uppercase tracking-wide text-slate-500">
+                <tr className="type-table-head border-b border-slate-100 bg-slate-50/80 uppercase text-slate-500">
                   <th className="px-4 py-3 font-medium">Corretor</th>
                   <th className="px-4 py-3 font-medium">CRECI</th>
                   <th className="px-4 py-3 font-medium">WhatsApp</th>

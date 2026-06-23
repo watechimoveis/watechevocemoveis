@@ -10,7 +10,7 @@ export function AdminLayout() {
   return (
     <div className="min-h-screen bg-slate-50">
       <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur">
-        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6">
+        <div className="admin-container flex h-14 items-center justify-between xl:h-16">
           <div className="flex min-w-0 items-center gap-4 lg:gap-6">
             <Link to="/" className="flex min-w-0 items-center">
               <BrandLogo size="sm" />
@@ -30,10 +30,10 @@ export function AdminLayout() {
             </nav>
           </div>
           <div className="flex shrink-0 items-center gap-2 sm:gap-3">
-            <p className="hidden text-xs text-slate-500 sm:block">{isAdmin ? 'Administrador' : 'Corretor'}</p>
+            <p className="type-meta hidden text-slate-500 sm:block">{isAdmin ? 'Administrador' : 'Corretor'}</p>
             <div className="hidden text-right md:block">
-              <p className="text-sm font-medium text-slate-800">{user?.name}</p>
-              <p className="text-xs text-slate-500">{user?.email}</p>
+              <p className="text-sm font-medium text-slate-800 xl:text-base">{user?.name}</p>
+              <p className="type-meta text-slate-500">{user?.email}</p>
             </div>
             <Button variant="ghost" size="sm" onClick={logout}>
               Sair
@@ -42,7 +42,7 @@ export function AdminLayout() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-4 py-5 sm:px-6 sm:py-6 pb-bottom-nav lg:pb-6">
+      <main className="admin-container py-5 sm:py-6 pb-bottom-nav lg:pb-6">
         <Outlet />
       </main>
 
@@ -78,7 +78,7 @@ function NavLink({
   return (
     <Link
       to={to}
-      className={`rounded-lg px-3 py-2 text-sm font-medium transition ${
+      className={`rounded-lg px-3 py-2 text-sm font-medium transition xl:px-3.5 xl:py-2.5 xl:text-base ${
         isActive
           ? 'bg-blue-50 text-blue-700'
           : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
