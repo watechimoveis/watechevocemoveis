@@ -1,4 +1,4 @@
-import heroBg from '../../assets/sysestate.png'
+import heroBg from '../../assets/bgterrenos.png'
 import { HomeHeader } from './HomeHeader'
 import { HeroSearch } from './HeroSearch'
 import type { SearchState } from '../../hooks/usePropertySearch'
@@ -25,27 +25,24 @@ export function HomeHero({ draft, onChange, onSearch, loading, total }: HomeHero
       <img
         src={heroBg}
         alt=""
-        className="absolute inset-0 h-full w-full scale-105 object-cover object-center"
+        className="absolute inset-0 h-full w-full object-cover object-[center_30%]"
         aria-hidden="true"
       />
-      <div className="absolute inset-0 bg-gradient-to-br from-emerald-950/80 via-slate-950/70 to-slate-950/90" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_70%_40%,rgba(251,191,36,0.12),transparent_55%)]" />
+      <div className="absolute inset-0 bg-gradient-to-r from-slate-950/75 via-slate-950/45 to-slate-950/25" />
+      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-slate-950/20" />
 
       <HomeHeader />
 
       <div className="relative mx-auto flex min-h-[100dvh] max-w-7xl flex-col px-4 pb-28 pt-24 sm:px-6 lg:px-8 lg:pb-32 lg:pt-28">
         <div className="grid flex-1 items-center gap-10 lg:grid-cols-[1fr_auto] lg:gap-16">
-          <div className="max-w-xl">
-            <h1 className="text-3xl font-bold leading-tight tracking-tight text-white sm:text-4xl lg:text-5xl">
-              Encontre o terreno ideal para o{' '}
-              <span className="text-amber-400">seu projeto.</span>
-            </h1>
-            <p className="mt-4 text-base leading-relaxed text-white/75 sm:text-lg">
-              Opções de terrenos e imóveis em localização privilegiada para investir ou construir — com
-              contato direto ao corretor responsável.
+          <div className="max-w-xl lg:pt-28">
+            <h1 className="sr-only">Encontre o terreno ideal para realizar seus planos — SysEstate</h1>
+            <p className="text-base leading-relaxed text-white/90 sm:text-lg lg:max-w-md">
+              As melhores oportunidades de terrenos para investir ou construir — com contato direto ao
+              corretor responsável.
             </p>
 
-            <ul className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:gap-6">
+            <ul className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:gap-6">
               {TRUST_ITEMS.map(({ icon: Icon, label }) => (
                 <li key={label} className="flex items-center gap-2.5 text-sm text-white/85">
                   <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/15 text-amber-400 ring-1 ring-amber-400/20">
