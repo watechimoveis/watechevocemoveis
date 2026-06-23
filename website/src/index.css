@@ -2,43 +2,33 @@
 
 @theme {
   --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --header-height: 3.5rem;
+}
+
+@media (min-width: 640px) {
+  :root {
+    --header-height: 4rem;
+  }
 }
 
 body {
   @apply bg-white text-slate-900 antialiased;
-}
-
-@utility safe-bottom {
-  padding-bottom: max(1rem, env(safe-area-inset-bottom, 0px));
-}
-
-@utility safe-top {
-  padding-top: env(safe-area-inset-top, 0px);
-}
-
-@utility touch-target {
-  min-height: 44px;
-  min-width: 44px;
-}
-
-@utility tap-highlight-none {
   -webkit-tap-highlight-color: transparent;
 }
 
-html {
-  scroll-behavior: smooth;
+.sticky-below-header {
+  top: var(--header-height);
 }
 
-@media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-behavior: auto;
-  }
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
 
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
+.scroll-snap-x {
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+
+.scroll-snap-item {
+  scroll-snap-align: start;
 }

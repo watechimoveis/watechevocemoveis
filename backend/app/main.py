@@ -10,9 +10,8 @@ from app.config import settings
 from app.modules.auth.router import router as auth_router
 from app.modules.properties.router import router as properties_router
 from app.modules.users.router import router as agents_router
-from app.shared.database.migrate import run_migrations
 from app.shared.database.seed import seed_admin_user
-from app.shared.database.session import SessionLocal, check_database_connection, database_connection_error
+from app.shared.database.session import SessionLocal
 from app.shared.errors.handlers import register_exception_handlers
 from app.shared.storage import supabase_storage
 
@@ -22,22 +21,6 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    if settings.app_env == "production" and "localhost" in settings.database_url:
-        logger.error(
-            "DATABASE_URL aponta para localhost em produção — configure a URI do Supabase no Render"
-        )
-
-    try:
-        run_migrations()
-    except Exception:
-        logger.exception("Falha ao aplicar migrations — verifique DATABASE_URL e conectividade")
-
-    if not check_database_connection():
-        detail = database_connection_error() or "desconhecido"
-        logger.error("PostgreSQL indisponível: %s", detail)
-    else:
-        logger.info("Conexão com PostgreSQL OK")
-
     if settings.use_supabase_storage:
         supabase_storage.ensure_bucket()
         logger.info("Storage de fotos: Supabase (%s)", settings.storage_bucket)
@@ -83,10 +66,8 @@ def create_app() -> FastAPI:
 
     @app.get("/health")
     def health():
-        db_ok = check_database_connection()
         return {
-            "status": "ok" if db_ok else "degraded",
-            "database": "ok" if db_ok else "error",
+            "status": "ok",
             "storage": "supabase" if settings.use_supabase_storage else "local",
         }
 

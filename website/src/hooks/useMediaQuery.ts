@@ -15,3 +15,8 @@ export function useMediaQuery(query: string): boolean {
 
   return matches
 }
+
+/** Telas menores que desktop (celular + tablet). */
+export function useIsMobileLayout() {
+  return useMediaQuery('(max-width: 1023px)')
+}

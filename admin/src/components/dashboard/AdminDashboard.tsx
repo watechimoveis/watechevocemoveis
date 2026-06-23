@@ -41,13 +41,13 @@ export function AdminDashboard() {
         <p className="mt-1 text-sm text-slate-500">Gerencie corretores e todos os anúncios do site</p>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-        <StatCard label="Anúncios" value={loading ? '—' : totalProperties} />
-        <StatCard label="Corretores ativos" value={loading ? '—' : totalAgents} />
-        <StatCard label="Compra" value={loading ? '—' : saleCount} />
-        <StatCard label="Aluguel" value={loading ? '—' : rentCount} />
-        <StatCard label="Views (7d)" value={loading ? '—' : totalViews7d} />
-        <StatCard label="WhatsApp (7d)" value={loading ? '—' : totalWhatsApp7d} highlight />
+      <div className="-mx-4 flex gap-3 overflow-x-auto scroll-snap-x px-4 pb-1 sm:mx-0 sm:grid sm:grid-cols-3 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-6">
+        <StatCard label="Anúncios" value={loading ? '—' : totalProperties} className="scroll-snap-item min-w-[9rem] shrink-0 sm:min-w-0 sm:shrink" />
+        <StatCard label="Corretores ativos" value={loading ? '—' : totalAgents} className="scroll-snap-item min-w-[9rem] shrink-0 sm:min-w-0 sm:shrink" />
+        <StatCard label="Compra" value={loading ? '—' : saleCount} className="scroll-snap-item min-w-[9rem] shrink-0 sm:min-w-0 sm:shrink" />
+        <StatCard label="Aluguel" value={loading ? '—' : rentCount} className="scroll-snap-item min-w-[9rem] shrink-0 sm:min-w-0 sm:shrink" />
+        <StatCard label="Views (7d)" value={loading ? '—' : totalViews7d} className="scroll-snap-item min-w-[9rem] shrink-0 sm:min-w-0 sm:shrink" />
+        <StatCard label="WhatsApp (7d)" value={loading ? '—' : totalWhatsApp7d} highlight className="scroll-snap-item min-w-[9rem] shrink-0 sm:min-w-0 sm:shrink" />
       </div>
 
       <section>
@@ -86,10 +86,10 @@ export function AdminDashboard() {
   )
 }
 
-function StatCard({ label, value, highlight }: { label: string; value: string | number; highlight?: boolean }) {
+function StatCard({ label, value, highlight, className = '' }: { label: string; value: string | number; highlight?: boolean; className?: string }) {
   return (
     <div
-      className={`rounded-xl border px-4 py-3 ${
+      className={`rounded-xl border px-4 py-3 ${className} ${
         highlight ? 'border-emerald-200 bg-emerald-50' : 'border-slate-200 bg-white'
       }`}
     >

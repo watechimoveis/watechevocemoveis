@@ -6,20 +6,17 @@ const SITE_NAME = 'W.A.Techevoceimoveis'
 export function SiteLayout() {
   return (
     <div className="flex min-h-screen flex-col bg-slate-50">
-      <header className="sticky top-0 z-50 border-b border-slate-200 bg-white safe-top">
+      <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/95 backdrop-blur">
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-3 px-4 sm:h-16 sm:px-6">
-          <Link to="/" className="flex min-w-0 items-center gap-2.5 tap-highlight-none">
+          <Link to="/" className="flex min-w-0 items-center gap-2.5">
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-600 text-[10px] font-bold leading-none text-white">
               WA
             </div>
-            <span className="truncate text-base font-bold tracking-tight text-slate-900 sm:text-lg">
-              <span className="sm:hidden">W.A.Tech</span>
-              <span className="hidden sm:inline">{SITE_NAME}</span>
-            </span>
+            <span className="truncate text-sm font-bold tracking-tight text-slate-900 sm:text-lg">{SITE_NAME}</span>
           </Link>
           <Link
             to="/admin"
-            className="shrink-0 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition active:scale-[0.98] hover:border-slate-300 hover:bg-slate-50 sm:px-4"
+            className="shrink-0 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 active:scale-95 sm:px-4 sm:text-sm"
           >
             <span className="sm:hidden">Corretor</span>
             <span className="hidden sm:inline">Login corretor</span>
