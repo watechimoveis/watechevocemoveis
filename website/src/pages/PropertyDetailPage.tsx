@@ -10,7 +10,7 @@ import { recordPropertyEvent } from '../services/analyticsService'
 import { getProperty } from '../services/propertiesService'
 import type { Property } from '../types/property'
 import { LISTING_LABELS } from '../types/property'
-import { formatPricePerSqm, normalizePropertyType, propertyTypeLabel } from '../utils/propertyDisplay'
+import { formatArea, formatPricePerSqm, normalizePropertyType, propertyTypeLabel } from '../utils/propertyDisplay'
 import { formatSocialProof } from '../utils/analytics'
 import { getAgentFirstName } from '../utils/agent'
 import { buildWhatsAppUrl, formatPrice, propertyWhatsAppMessage } from '../utils/format'
@@ -104,7 +104,7 @@ export function PropertyDetailPage() {
   if (property.size != null) {
     specs.push({
       label: isLand ? 'Área do terreno' : 'Área',
-      value: `${property.size} m²`,
+      value: formatArea(property.size) ?? `${property.size} m²`,
     })
   }
 

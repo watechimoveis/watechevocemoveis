@@ -1,4 +1,8 @@
-export const API_ORIGIN = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '')
+const PRODUCTION_API_ORIGIN = 'https://watech-api.onrender.com'
+
+export const API_ORIGIN = (
+  import.meta.env.VITE_API_URL || (import.meta.env.PROD ? PRODUCTION_API_ORIGIN : '')
+).replace(/\/$/, '')
 
 export function apiUrl(path: string): string {
   const normalized = path.startsWith('/') ? path : `/${path}`

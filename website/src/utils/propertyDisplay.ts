@@ -10,13 +10,19 @@ export function propertyTypeLabel(value?: PropertyType | null): string {
   return PROPERTY_TYPE_LABELS[normalizePropertyType(value)]
 }
 
+export function formatArea(size: number | null | undefined): string | null {
+  if (size == null || size <= 0) return null
+  const decimals = size >= 10_000 ? 0 : size >= 100 ? 0 : size >= 10 ? 1 : 2
+  return `${new Intl.NumberFormat('pt-BR', { maximumFractionDigits: decimals }).format(size)} m²`
+}
+
 export function formatPricePerSqm(price: number | null | undefined, size: number | null | undefined): string | null {
   if (price == null || size == null || size <= 0) return null
   const perSqm = price / size
   return `${new Intl.NumberFormat('pt-BR', {
     style: 'currency',
     currency: 'BRL',
-    maximumFractionDigits: 0,
+    maximumFractionDigits: perSqm >= 1000 ? 0 : 2,
   }).format(perSqm)}/m²`
 }
 
@@ -27,7 +33,7 @@ export function propertyHighlights(property: Pick<Property, 'property_type' | 'r
   return [
     !isLand && property.rooms != null && `${property.rooms} qt`,
     !isLand && property.bathrooms != null && `${property.bathrooms} bh`,
-    property.size != null && `${property.size} m²`,
+    !isLand && property.size != null && formatArea(property.size),
     !isLand && property.parking != null && `${property.parking} vg`,
   ].filter(Boolean) as string[]
 }

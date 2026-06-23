@@ -3,7 +3,7 @@ import { mediaUrl } from '../../lib/api'
 import { recordPropertyEvent } from '../../services/analyticsService'
 import type { Property } from '../../types/property'
 import { getCoverImage, LISTING_LABELS } from '../../types/property'
-import { formatPricePerSqm, normalizePropertyType, propertyHighlights, propertyTypeLabel } from '../../utils/propertyDisplay'
+import { formatArea, formatPricePerSqm, normalizePropertyType, propertyHighlights, propertyTypeLabel } from '../../utils/propertyDisplay'
 import { PropertyCoverImage } from './PropertyCoverImage'
 import { getAgentFirstName } from '../../utils/agent'
 import { buildWhatsAppUrl, formatPrice, propertyWhatsAppMessage } from '../../utils/format'
@@ -23,6 +23,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
   const cover = getCoverImage(property)
   const coverSrc = mediaUrl(cover)
   const type = normalizePropertyType(property.property_type)
+  const areaLabel = formatArea(property.size)
   const sqmPrice = type === 'land' ? formatPricePerSqm(property.price, property.size) : null
 
   return (
@@ -50,6 +51,11 @@ export function PropertyCard({ property }: PropertyCardProps) {
             {LISTING_LABELS[property.listing_type]}
           </span>
         </div>
+        {type === 'land' && areaLabel && (
+          <span className="absolute bottom-2 right-2 rounded-md bg-slate-900/75 px-2.5 py-1 text-xs font-semibold text-white backdrop-blur-sm">
+            {areaLabel}
+          </span>
+        )}
         {property.images.length > 1 && (
           <span className="absolute right-2 top-2 rounded-md bg-black/65 px-2 py-0.5 text-[11px] font-medium text-white">
             {property.images.length} fotos
