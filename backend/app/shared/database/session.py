@@ -21,7 +21,8 @@ def _engine_kwargs() -> dict:
         kwargs["max_overflow"] = 10
 
     if settings.app_env == "production" and "sslmode=" not in url.lower():
-        connect_args["sslmode"] = "require"
+        if "supabase.com" in url or "supabase.co" in url:
+            connect_args["sslmode"] = "require"
 
     if connect_args:
         kwargs["connect_args"] = connect_args

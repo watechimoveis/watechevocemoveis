@@ -6,7 +6,12 @@
 #   ADMIN_PASSWORD — senha do admin
 #
 # Se a API retorna 500: confira Logs do watech-api e /health (campo "database").
-# Erro "tenant/user not found" = DATABASE_URL desatualizado — copie de novo no Supabase.
+# O Postgres abaixo é provisionado automaticamente pelo Blueprint (recomendado).
+
+databases:
+  - name: watech-db
+    plan: free
+    region: oregon
 
 services:
   - type: web
@@ -24,7 +29,9 @@ services:
       - key: APP_ENV
         value: production
       - key: DATABASE_URL
-        sync: false
+        fromDatabase:
+          name: watech-db
+          property: connectionString
       - key: JWT_SECRET
         generateValue: true
       - key: JWT_EXPIRE_MINUTES
