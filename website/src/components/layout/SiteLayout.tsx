@@ -26,15 +26,28 @@ export function SiteLayout() {
 
       <footer className="mt-auto border-t border-slate-200 bg-white py-6">
         <div className="mx-auto max-w-6xl px-4 text-center text-xs text-slate-400 sm:px-6">
-          © {new Date().getFullYear()} {BRAND.name}
-          {import.meta.env.DEV && (
-            <span className="ml-2">
-              · Painel:{' '}
-              <a href={ADMIN_URL} className="underline hover:text-slate-600">
-                {ADMIN_URL}
-              </a>
-            </span>
-          )}
+          <p>
+            © {new Date().getFullYear()} {BRAND.name}
+            {import.meta.env.DEV && (
+              <span className="ml-2">
+                · Painel:{' '}
+                <a href={ADMIN_URL} className="underline hover:text-slate-600">
+                  {ADMIN_URL}
+                </a>
+              </span>
+            )}
+          </p>
+          <p className="mt-2 text-slate-500">
+            Desenvolvido por{' '}
+            <a
+              href="https://www.watechevoce.com.br"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium text-slate-600 hover:text-slate-800"
+            >
+              W.A.Techevoce
+            </a>
+          </p>
         </div>
       </footer>
     </div>

@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import type { PropertyType } from '../../types/property'
-import { normalizePropertyType } from '../../utils/propertyDisplay'
 
 type CoverAspect = 'card' | 'gallery'
 
@@ -35,14 +34,12 @@ function CoverPlaceholder({ aspect }: { aspect: CoverAspect }) {
 export function PropertyCoverImage({
   src,
   alt,
-  propertyType,
   aspect = 'card',
   className = '',
   loading = 'lazy',
   draggable,
 }: PropertyCoverImageProps) {
   const [failed, setFailed] = useState(false)
-  const isLand = normalizePropertyType(propertyType) === 'land'
 
   if (!src || failed) {
     return <CoverPlaceholder aspect={aspect} />
@@ -58,9 +55,7 @@ export function PropertyCoverImage({
         loading={loading}
         draggable={draggable}
         onError={() => setFailed(true)}
-        className={`absolute inset-0 h-full w-full object-center ${
-          isLand ? 'object-contain' : 'object-cover'
-        }`}
+        className="absolute inset-0 h-full w-full object-cover object-center"
       />
     </div>
   )

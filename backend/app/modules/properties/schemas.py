@@ -34,14 +34,26 @@ class PropertyBase(BaseModel):
 
     title: str | None = None
     listing_type: str | None = "sale"
-    property_type: str | None = Field(default="land", pattern="^(house|apartment|land)$")
+    property_type: str | None = Field(default="terreno", pattern="^(terreno|lote)$")
     location: str | None = None
     price: Decimal | None = None
     description: str | None = None
-    rooms: int | None = None
-    bathrooms: int | None = None
-    parking: int | None = None
     size: Decimal | None = None
+
+    zoning: str | None = Field(default=None, pattern="^(residential|commercial|industrial|rural|mixed)$")
+    topography: str | None = Field(default=None, pattern="^(flat|slope_up|slope_down|irregular)$")
+    frontage: Decimal | None = Field(default=None, ge=0)
+    depth: Decimal | None = Field(default=None, ge=0)
+    documentation: str | None = Field(default=None, pattern="^(deed|registration|contract|financing)$")
+    gated_community: bool = False
+    accepts_financing: bool = False
+    has_water: bool = False
+    has_electricity: bool = False
+    has_sewage: bool = False
+    paved_street: bool = False
+    development_name: str | None = Field(default=None, max_length=160)
+    block: str | None = Field(default=None, max_length=30)
+    lot_number: str | None = Field(default=None, max_length=30)
 
 
 class PropertyCreate(PropertyBase):
@@ -57,7 +69,7 @@ class PropertyResponse(PropertyBase):
 
     id: UUID
     listing_type: str = "sale"
-    property_type: str = "land"
+    property_type: str = "terreno"
     agent_user_id: UUID | None = None
     agent_name: str | None = None
     agent_creci: str | None = None

@@ -77,14 +77,21 @@ alembic upgrade head
 uvicorn app.main:app --reload
 ```
 
-## Exemplo — criar imóvel parcial
+## Exemplo — criar terreno parcial
 
 ```bash
 curl -X POST http://localhost:8000/api/v1/properties \
   -H "Content-Type: application/json" \
-  -d "{\"title\": \"Apartamento centro\", \"price\": 450000, \"agent_whatsapp\": \"5511999999999\"}"
+  -d "{\"title\": \"Terreno 360m2 Centro\", \"property_type\": \"terreno\", \"price\": 250000, \"size\": 360, \"agent_whatsapp\": \"5511999999999\"}"
 ```
 
-## Campos do imóvel
+## Campos do anúncio (terrenos e lotes)
 
-Todos opcionais: `title`, `location`, `price`, `description`, `rooms`, `bathrooms`, `parking`, `size`, `agent_whatsapp`.
+- `property_type`: `terreno` (avulso) ou `lote` (em loteamento/condomínio). Default `terreno`.
+- Básicos: `title`, `location`, `price`, `description`, `size` (área em m²), `agent_whatsapp`.
+- Dimensões: `frontage` (frente em m), `depth` (fundo em m).
+- Classificação: `zoning` (`residential|commercial|industrial|rural|mixed`), `topography` (`flat|slope_up|slope_down|irregular`), `documentation` (`deed|registration|contract|financing`).
+- Booleanos: `gated_community`, `accepts_financing`, `has_water`, `has_electricity`, `has_sewage`, `paved_street`.
+- Loteamento: `development_name`, `block`, `lot_number`.
+
+Todos os campos são opcionais (exceto regras de negócio para publicação no site).

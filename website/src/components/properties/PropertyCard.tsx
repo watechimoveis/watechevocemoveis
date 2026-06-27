@@ -24,7 +24,6 @@ export function PropertyCard({ property }: PropertyCardProps) {
   const cover = getCoverImage(property)
   const coverSrc = mediaUrl(cover)
   const type = normalizePropertyType(property.property_type)
-  const isLand = type === 'land'
 
   return (
     <article className="flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:shadow-md">
@@ -61,13 +60,11 @@ export function PropertyCard({ property }: PropertyCardProps) {
       <div className="flex flex-1 flex-col p-4">
         <Link to={`/imovel/${property.id}`}>
           <p className="text-xl font-bold text-slate-900">
-            {formatPrice(property.price, property.listing_type)}
+            {formatPrice(property.price)}
           </p>
-          {isLand && (
-            <LandListingMeta size={property.size} className="mt-0.5 text-xs sm:text-sm" />
-          )}
+          <LandListingMeta size={property.size} className="mt-0.5 text-xs sm:text-sm" />
           <h3 className="mt-1 line-clamp-1 text-sm font-semibold text-slate-800">
-            {property.title || 'Imóvel disponível'}
+            {property.title || 'Terreno disponível'}
           </h3>
           {property.location && (
             <p className="mt-0.5 line-clamp-1 text-sm text-slate-500">{property.location}</p>

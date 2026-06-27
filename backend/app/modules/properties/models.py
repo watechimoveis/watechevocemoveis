@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, Index, Integer, Numeric, String, Text, func
+from sqlalchemy import Boolean, DateTime, ForeignKey, Index, Integer, Numeric, String, Text, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -13,15 +13,31 @@ class Property(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     title: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    # Mantido por compatibilidade; o produto trabalha apenas com venda ("sale").
     listing_type: Mapped[str] = mapped_column(String(10), nullable=False, default="sale")
-    property_type: Mapped[str] = mapped_column(String(20), nullable=False, default="land")
+    # Tipo de imóvel restrito a terreno avulso ("terreno") ou lote em loteamento/condomínio ("lote").
+    property_type: Mapped[str] = mapped_column(String(20), nullable=False, default="terreno")
     location: Mapped[str | None] = mapped_column(String(500), nullable=True)
     price: Mapped[float | None] = mapped_column(Numeric(19, 4), nullable=True)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
-    rooms: Mapped[int | None] = mapped_column(nullable=True)
-    bathrooms: Mapped[int | None] = mapped_column(nullable=True)
-    parking: Mapped[int | None] = mapped_column(nullable=True)
     size: Mapped[float | None] = mapped_column(Numeric(12, 2), nullable=True)
+
+    # Características específicas de terreno/lote
+    zoning: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    topography: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    frontage: Mapped[float | None] = mapped_column(Numeric(8, 2), nullable=True)
+    depth: Mapped[float | None] = mapped_column(Numeric(8, 2), nullable=True)
+    documentation: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    gated_community: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    accepts_financing: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    has_water: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    has_electricity: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    has_sewage: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    paved_street: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    development_name: Mapped[str | None] = mapped_column(String(160), nullable=True)
+    block: Mapped[str | None] = mapped_column(String(30), nullable=True)
+    lot_number: Mapped[str | None] = mapped_column(String(30), nullable=True)
+
     agent_name: Mapped[str | None] = mapped_column(String(120), nullable=True)
     agent_creci: Mapped[str | None] = mapped_column(String(30), nullable=True)
     agent_whatsapp: Mapped[str | None] = mapped_column(String(30), nullable=True)

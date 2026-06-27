@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
 import type { SearchState } from '../../hooks/usePropertySearch'
-import type { ListingType, PropertyCategory } from '../../types/property'
+import type { PropertyType, Zoning } from '../../types/property'
+import { ZONING_LABELS } from '../../types/property'
 import { formatPriceDigits, parsePriceDigits } from '../../utils/priceInput'
 
-export type SearchTab = 'terrenos' | 'imoveis' | 'alugueis'
+export type SearchTab = 'todos' | 'terrenos' | 'lotes'
 
 interface HeroSearchProps {
   draft: SearchState
@@ -12,29 +13,27 @@ interface HeroSearchProps {
   loading?: boolean
 }
 
-const TABS: { id: SearchTab; label: string; listingType: ListingType; category: PropertyCategory | '' }[] = [
-  { id: 'terrenos', label: 'Terrenos', listingType: 'sale', category: 'land' },
-  { id: 'imoveis', label: 'Imóveis', listingType: 'sale', category: 'residential' },
-  { id: 'alugueis', label: 'Aluguéis', listingType: 'rent', category: '' },
+const TABS: { id: SearchTab; label: string; propertyType: PropertyType | '' }[] = [
+  { id: 'todos', label: 'Todos', propertyType: '' },
+  { id: 'terrenos', label: 'Terrenos', propertyType: 'terreno' },
+  { id: 'lotes', label: 'Lotes', propertyType: 'lote' },
 ]
 
+const ZONING_ENTRIES = Object.entries(ZONING_LABELS) as [Zoning, string][]
+
+function tabFromType(type: PropertyType | ''): SearchTab {
+  if (type === 'terreno') return 'terrenos'
+  if (type === 'lote') return 'lotes'
+  return 'todos'
+}
+
 export function HeroSearch({ draft, onChange, onSearch, loading }: HeroSearchProps) {
-  const [tab, setTab] = useState<SearchTab>(() => {
-    if (draft.listingType === 'rent') return 'alugueis'
-    if (draft.category === 'residential') return 'imoveis'
-    return 'terrenos'
-  })
+  const [tab, setTab] = useState<SearchTab>(() => tabFromType(draft.propertyType))
   const [advancedOpen, setAdvancedOpen] = useState(false)
 
   useEffect(() => {
-    if (draft.listingType === 'rent') {
-      setTab('alugueis')
-    } else if (draft.category === 'residential') {
-      setTab('imoveis')
-    } else {
-      setTab('terrenos')
-    }
-  }, [draft.listingType, draft.category])
+    setTab(tabFromType(draft.propertyType))
+  }, [draft.propertyType])
 
   function setField<K extends keyof SearchState>(key: K, value: SearchState[K]) {
     onChange({ ...draft, [key]: value })
@@ -43,12 +42,7 @@ export function HeroSearch({ draft, onChange, onSearch, loading }: HeroSearchPro
   function selectTab(next: SearchTab) {
     setTab(next)
     const tabConfig = TABS.find((t) => t.id === next)!
-    const nextDraft: SearchState = {
-      ...draft,
-      listingType: tabConfig.listingType,
-      category: tabConfig.category,
-      minRooms: next === 'terrenos' ? '' : draft.minRooms,
-    }
+    const nextDraft: SearchState = { ...draft, propertyType: tabConfig.propertyType }
     onChange(nextDraft)
     onSearch(nextDraft)
   }
@@ -59,8 +53,7 @@ export function HeroSearch({ draft, onChange, onSearch, loading }: HeroSearchPro
     document.getElementById('imoveis')?.scrollIntoView({ behavior: 'smooth' })
   }
 
-  const ctaLabel =
-    tab === 'alugueis' ? 'Buscar aluguéis' : tab === 'imoveis' ? 'Buscar imóveis' : 'Buscar terrenos'
+  const ctaLabel = tab === 'lotes' ? 'Buscar lotes' : tab === 'terrenos' ? 'Buscar terrenos' : 'Buscar terrenos e lotes'
 
   return (
     <div
@@ -134,20 +127,27 @@ export function HeroSearch({ draft, onChange, onSearch, loading }: HeroSearchPro
                 />
               </Field>
             </div>
-            {tab === 'imoveis' && (
-              <Field label="Quartos (mín.)">
-                <select
-                  value={draft.minRooms}
-                  onChange={(e) => setField('minRooms', e.target.value)}
-                  className={inputClass}
-                >
-                  <option value="" className="bg-slate-900">Qualquer</option>
-                  {['1', '2', '3', '4'].map((n) => (
-                    <option key={n} value={n} className="bg-slate-900">{n}+</option>
-                  ))}
-                </select>
-              </Field>
-            )}
+            <Field label="Zoneamento / uso">
+              <select
+                value={draft.zoning}
+                onChange={(e) => setField('zoning', e.target.value as Zoning | '')}
+                className={inputClass}
+              >
+                <option value="" className="bg-slate-900">Qualquer</option>
+                {ZONING_ENTRIES.map(([value, label]) => (
+                  <option key={value} value={value} className="bg-slate-900">{label}</option>
+                ))}
+              </select>
+            </Field>
+            <label className="flex cursor-pointer items-center gap-2 text-sm text-white/80">
+              <input
+                type="checkbox"
+                checked={draft.gatedCommunity}
+                onChange={(e) => setField('gatedCommunity', e.target.checked)}
+                className="h-4 w-4 rounded border-white/20 bg-white/5 text-amber-500 focus:ring-amber-400/30"
+              />
+              Apenas em condomínio fechado
+            </label>
           </div>
         )}
 

@@ -4,11 +4,23 @@ import { propertyPublicUrl } from '../../lib/site'
 import { listAgents } from '../../services/agentsService'
 import { uploadPropertyImages } from '../../services/propertiesService'
 import { whatsappConversionRate } from '../../utils/analytics'
-import type { Property, PropertyPayload, PropertyType } from '../../types/property'
-import { LISTING_LABELS, PROPERTY_TYPE_LABELS } from '../../types/property'
+import type {
+  Documentation,
+  Property,
+  PropertyPayload,
+  PropertyType,
+  Topography,
+  Zoning,
+} from '../../types/property'
+import {
+  DOCUMENTATION_LABELS,
+  PROPERTY_TYPE_LABELS,
+  TOPOGRAPHY_LABELS,
+  ZONING_LABELS,
+} from '../../types/property'
 import type { User } from '../../types/user'
 import { formatWhatsAppPhone, getAgentInitials } from '../../utils/agent'
-import { digitsToNumber, formatAreaField, formatPriceDigits, parseAreaField, parsePriceDigits } from '../../utils/priceInput'
+import { formatAreaField, formatPriceDigits, parseAreaField, parsePriceDigits } from '../../utils/priceInput'
 import { Input, Textarea } from '../ui/Input'
 import { PropertyImages } from './PropertyImages'
 
@@ -22,33 +34,29 @@ interface PropertyFormProps {
   loading?: boolean
 }
 
-const LISTING_TYPES = ['sale', 'rent'] as const
-
 const CATEGORIES: {
   value: PropertyType
   label: string
   hint: string
   icon: string
 }[] = [
-  { value: 'land', label: 'Terreno', hint: 'Lote, área, condomínio', icon: '🏞️' },
-  { value: 'house', label: 'Casa', hint: 'Térrea, sobrado, chácara', icon: '🏠' },
-  { value: 'apartment', label: 'Apartamento', hint: 'Flat, cobertura, kitnet', icon: '🏢' },
+  { value: 'terreno', label: 'Terreno', hint: 'Área avulsa, urbana ou rural', icon: '🏞️' },
+  { value: 'lote', label: 'Lote', hint: 'Em loteamento ou condomínio', icon: '📐' },
 ]
 
 const TITLE_PLACEHOLDERS: Record<PropertyType, string> = {
-  land: 'Ex: Terreno 360m² em condomínio fechado',
-  house: 'Ex: Casa térrea 3 quartos com quintal',
-  apartment: 'Ex: Apartamento 3 quartos no Centro',
+  terreno: 'Ex: Terreno 360m² com escritura no Centro',
+  lote: 'Ex: Lote 250m² em condomínio fechado',
 }
 
-const DESCRIPTION_PLACEHOLDERS: Record<PropertyType, string> = {
-  land: 'Topografia, zoneamento, infraestrutura (água, luz), acesso…',
-  house: 'Detalhes da casa, acabamento, área externa, condomínio…',
-  apartment: 'Detalhes do apartamento, condomínio, lazer, mobília…',
-}
+const DESCRIPTION_PLACEHOLDER =
+  'Localização, acesso, vizinhança, potencial de construção, diferenciais do loteamento…'
 
-const LAND_TAGS = ['Investimento', 'Construção', 'Comércio', 'Plano', 'Esquina', 'Declive']
-const RESIDENTIAL_TAGS = ['Mobiliado', 'Aceita pet', 'Condomínio', 'Garagem', 'Novo', 'Reformado']
+const LAND_TAGS = ['Investimento', 'Pronto para construir', 'Documentação ok', 'Esquina', 'Plano', 'Murado']
+
+const ZONING_OPTIONS = Object.entries(ZONING_LABELS) as [Zoning, string][]
+const TOPOGRAPHY_OPTIONS = Object.entries(TOPOGRAPHY_LABELS) as [Topography, string][]
+const DOCUMENTATION_OPTIONS = Object.entries(DOCUMENTATION_LABELS) as [Documentation, string][]
 
 function toFormValue(value: string | number | null | undefined): string {
   if (value == null) return ''
@@ -56,45 +64,66 @@ function toFormValue(value: string | number | null | undefined): string {
 }
 
 function parseNumber(value: string): number | undefined {
-  return digitsToNumber(parsePriceDigits(value))
-}
-
-function parseIntField(value: string): number | undefined {
-  const trimmed = value.trim()
-  if (!trimmed) return undefined
-  const num = parseInt(trimmed, 10)
+  const digits = parsePriceDigits(value)
+  if (!digits) return undefined
+  const num = Number(digits)
   return Number.isNaN(num) ? undefined : num
 }
 
-function SegmentedControl<T extends string>({
+const selectClass =
+  'w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 xl:px-3.5 xl:py-2.5 xl:text-base'
+
+function Select<T extends string>({
   label,
   value,
   options,
+  placeholder,
   onChange,
 }: {
   label: string
-  value: T
-  options: { value: T; label: string }[]
-  onChange: (value: T) => void
+  value: T | ''
+  options: [T, string][]
+  placeholder?: string
+  onChange: (value: T | '') => void
 }) {
   return (
-    <div>
-      <p className="mb-2 text-sm font-medium text-slate-700">{label}</p>
-      <div className="inline-flex w-full rounded-lg bg-slate-100 p-1 sm:w-auto">
-        {options.map((option) => (
-          <button
-            key={option.value}
-            type="button"
-            onClick={() => onChange(option.value)}
-            className={`flex-1 rounded-md px-4 py-2 text-sm font-medium sm:flex-none ${
-              value === option.value ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-600'
-            }`}
-          >
-            {option.label}
-          </button>
+    <div className="space-y-1.5">
+      <label className="block text-sm font-medium text-slate-700 xl:text-base">{label}</label>
+      <select value={value} onChange={(e) => onChange(e.target.value as T | '')} className={selectClass}>
+        <option value="">{placeholder ?? 'Não informado'}</option>
+        {options.map(([key, optionLabel]) => (
+          <option key={key} value={key}>
+            {optionLabel}
+          </option>
         ))}
-      </div>
+      </select>
     </div>
+  )
+}
+
+function CheckboxChip({
+  label,
+  checked,
+  onChange,
+}: {
+  label: string
+  checked: boolean
+  onChange: (checked: boolean) => void
+}) {
+  return (
+    <label
+      className={`flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm transition ${
+        checked ? 'border-blue-500 bg-blue-50 text-blue-800' : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
+      }`}
+    >
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+        className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+      />
+      {label}
+    </label>
   )
 }
 
@@ -108,7 +137,7 @@ function CategorySelector({
   return (
     <div>
       <p className="mb-2 text-sm font-medium text-slate-700">Categoria</p>
-      <div className="grid grid-cols-1 gap-2 min-[400px]:grid-cols-3">
+      <div className="grid grid-cols-2 gap-2">
         {CATEGORIES.map((cat) => (
           <button
             key={cat.value}
@@ -134,30 +163,13 @@ function CategorySelector({
   )
 }
 
-function suggestTitle(
-  propertyType: PropertyType,
-  listingType: 'sale' | 'rent',
-  location: string,
-  size: string,
-  rooms: string,
-): string | null {
+function suggestTitle(propertyType: PropertyType, location: string, size: string): string | null {
   const place = location.split(',')[0]?.trim()
-  if (!place && !size && !rooms) return null
-
-  if (propertyType === 'land') {
-    if (!size) return place ? `Terreno — ${place}` : null
-    return place ? `Terreno ${size}m² — ${place}` : `Terreno ${size}m²`
-  }
+  if (!place && !size) return null
 
   const typeLabel = PROPERTY_TYPE_LABELS[propertyType]
-  const rentSuffix = listingType === 'rent' ? ' para alugar' : ''
-  if (rooms) {
-    const q = parseInt(rooms, 10)
-    const qt = q === 1 ? '1 quarto' : `${q} quartos`
-    return place ? `${typeLabel} ${qt}${rentSuffix} — ${place}` : `${typeLabel} ${qt}${rentSuffix}`
-  }
-
-  return place ? `${typeLabel}${rentSuffix} — ${place}` : null
+  if (!size) return place ? `${typeLabel} — ${place}` : null
+  return place ? `${typeLabel} ${size}m² — ${place}` : `${typeLabel} ${size}m²`
 }
 
 function CreatedBanner({ propertyId, photoCount }: { propertyId: string; photoCount: number }) {
@@ -210,12 +222,22 @@ export function PropertyForm({ property, defaultPropertyType, onSubmit, onCancel
   const [location, setLocation] = useState('')
   const [price, setPrice] = useState('')
   const [description, setDescription] = useState('')
-  const [rooms, setRooms] = useState('')
-  const [bathrooms, setBathrooms] = useState('')
-  const [parking, setParking] = useState('')
   const [size, setSize] = useState('')
-  const [propertyType, setPropertyType] = useState<PropertyType>('land')
-  const [listingType, setListingType] = useState<'sale' | 'rent'>('sale')
+  const [frontage, setFrontage] = useState('')
+  const [depth, setDepth] = useState('')
+  const [propertyType, setPropertyType] = useState<PropertyType>('terreno')
+  const [zoning, setZoning] = useState<Zoning | ''>('')
+  const [topography, setTopography] = useState<Topography | ''>('')
+  const [documentation, setDocumentation] = useState<Documentation | ''>('')
+  const [gatedCommunity, setGatedCommunity] = useState(false)
+  const [acceptsFinancing, setAcceptsFinancing] = useState(false)
+  const [hasWater, setHasWater] = useState(false)
+  const [hasElectricity, setHasElectricity] = useState(false)
+  const [hasSewage, setHasSewage] = useState(false)
+  const [pavedStreet, setPavedStreet] = useState(false)
+  const [developmentName, setDevelopmentName] = useState('')
+  const [block, setBlock] = useState('')
+  const [lotNumber, setLotNumber] = useState('')
   const [agentUserId, setAgentUserId] = useState('')
   const [pendingPhotos, setPendingPhotos] = useState<File[]>([])
   const [uploadingPhotos, setUploadingPhotos] = useState(false)
@@ -224,7 +246,7 @@ export function PropertyForm({ property, defaultPropertyType, onSubmit, onCancel
   const [photoError, setPhotoError] = useState('')
   const [publishedPhotos, setPublishedPhotos] = useState(0)
 
-  const isLand = propertyType === 'land'
+  const isLote = propertyType === 'lote'
   const isNew = !property?.id
   const selectedAgent = agents.find((a) => a.id === agentUserId)
   const canSubmitAsAdmin =
@@ -246,12 +268,22 @@ export function PropertyForm({ property, defaultPropertyType, onSubmit, onCancel
     setLocation(toFormValue(property?.location))
     setPrice(property?.price != null ? String(Math.round(property.price)) : '')
     setDescription(toFormValue(property?.description))
-    setRooms(toFormValue(property?.rooms))
-    setBathrooms(toFormValue(property?.bathrooms))
-    setParking(toFormValue(property?.parking))
     setSize(toFormValue(property?.size))
-    setPropertyType(property?.property_type || defaultPropertyType || 'land')
-    setListingType(property?.listing_type || 'sale')
+    setFrontage(toFormValue(property?.frontage))
+    setDepth(toFormValue(property?.depth))
+    setPropertyType(property?.property_type || defaultPropertyType || 'terreno')
+    setZoning(property?.zoning ?? '')
+    setTopography(property?.topography ?? '')
+    setDocumentation(property?.documentation ?? '')
+    setGatedCommunity(Boolean(property?.gated_community))
+    setAcceptsFinancing(Boolean(property?.accepts_financing))
+    setHasWater(Boolean(property?.has_water))
+    setHasElectricity(Boolean(property?.has_electricity))
+    setHasSewage(Boolean(property?.has_sewage))
+    setPavedStreet(Boolean(property?.paved_street))
+    setDevelopmentName(toFormValue(property?.development_name))
+    setBlock(toFormValue(property?.block))
+    setLotNumber(toFormValue(property?.lot_number))
     setAgentUserId(property?.agent_user_id || '')
     setPendingPhotos([])
     setFieldErrors({})
@@ -260,32 +292,21 @@ export function PropertyForm({ property, defaultPropertyType, onSubmit, onCancel
     setPublishedPhotos(0)
   }, [property, defaultPropertyType])
 
-  function handlePropertyTypeChange(next: PropertyType) {
-    setPropertyType(next)
-    if (next === 'land') {
-      setRooms('')
-      setBathrooms('')
-      setParking('')
-    }
-  }
-
   function appendTag(tag: string) {
     const bullet = `• ${tag}`
     if (description.includes(tag)) return
     setDescription(description.trim() ? `${description.trim()}\n${bullet}` : bullet)
   }
 
-  const titleSuggestion = suggestTitle(propertyType, listingType, location, size, rooms)
+  const titleSuggestion = suggestTitle(propertyType, location, size)
 
   function validate(): Record<string, string> {
     const errors: Record<string, string> = {}
     if (!title.trim() && !titleSuggestion) errors.title = 'Informe um título para o anúncio'
     if (!location.trim()) errors.location = 'Informe bairro ou cidade'
-    if (!price.trim() || parseNumber(price) == null) {
-      errors.price = listingType === 'rent' ? 'Informe o valor do aluguel' : 'Informe o preço'
-    }
-    if (isLand && !size.trim()) errors.size = 'Informe a área do terreno'
-    else if (size.trim() && parseAreaField(size) == null) errors.size = 'Informe uma área válida em m²'
+    if (!price.trim() || parseNumber(price) == null) errors.price = 'Informe o preço'
+    if (!size.trim()) errors.size = 'Informe a área do terreno'
+    else if (parseAreaField(size) == null) errors.size = 'Informe uma área válida em m²'
     return errors
   }
 
@@ -310,12 +331,23 @@ export function PropertyForm({ property, defaultPropertyType, onSubmit, onCancel
       location: location.trim(),
       price: parseNumber(price),
       description: description.trim() || undefined,
-      rooms: isLand ? null : parseIntField(rooms),
-      bathrooms: isLand ? null : parseIntField(bathrooms),
-      parking: isLand ? null : parseIntField(parking),
       size: parseAreaField(size),
       property_type: propertyType,
-      listing_type: listingType,
+      listing_type: 'sale',
+      zoning: zoning || null,
+      topography: topography || null,
+      frontage: parseAreaField(frontage),
+      depth: parseAreaField(depth),
+      documentation: documentation || null,
+      gated_community: gatedCommunity,
+      accepts_financing: acceptsFinancing,
+      has_water: hasWater,
+      has_electricity: hasElectricity,
+      has_sewage: hasSewage,
+      paved_street: pavedStreet,
+      development_name: developmentName.trim() || null,
+      block: block.trim() || null,
+      lot_number: lotNumber.trim() || null,
     }
 
     if (isAdmin && agentUserId) {
@@ -362,7 +394,6 @@ export function PropertyForm({ property, defaultPropertyType, onSubmit, onCancel
   const parsedArea = parseAreaField(size)
   const summaryParts = [
     PROPERTY_TYPE_LABELS[propertyType],
-    LISTING_LABELS[listingType],
     location.trim() || null,
     price.trim() ? formatPriceDigits(price) : null,
     parsedArea != null ? formatAreaField(parsedArea) : null,
@@ -382,7 +413,7 @@ export function PropertyForm({ property, defaultPropertyType, onSubmit, onCancel
               {getAgentInitials(user.name)}
             </div>
             <div className="flex-1">
-              <p className="text-sm font-semibold text-emerald-900">Seu perfil será vinculado a este imóvel</p>
+              <p className="text-sm font-semibold text-emerald-900">Seu perfil será vinculado a este anúncio</p>
               <p className="mt-1 text-xs text-emerald-800/80">
                 Nome e CRECI vêm do seu cadastro. O WhatsApp pode ser alterado no painel inicial.
               </p>
@@ -434,21 +465,14 @@ export function PropertyForm({ property, defaultPropertyType, onSubmit, onCancel
           </select>
           {isNew && !agentUserId && (
             <p className="mt-2 text-xs font-medium text-amber-700">
-              O imóvel só aparece no site quando vinculado a um corretor com WhatsApp.
+              O anúncio só aparece no site quando vinculado a um corretor com WhatsApp.
             </p>
           )}
         </section>
       )}
 
       <section className="space-y-4">
-        <CategorySelector value={propertyType} onChange={handlePropertyTypeChange} />
-
-        <SegmentedControl
-          label="Negócio"
-          value={listingType}
-          options={LISTING_TYPES.map((type) => ({ value: type, label: LISTING_LABELS[type] }))}
-          onChange={setListingType}
-        />
+        <CategorySelector value={propertyType} onChange={setPropertyType} />
 
         {summaryParts.length >= 2 && (
           <p className="rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-600">
@@ -459,7 +483,7 @@ export function PropertyForm({ property, defaultPropertyType, onSubmit, onCancel
         <div className="grid gap-4 sm:grid-cols-2">
           <div id="field-price">
             <Input
-              label={listingType === 'rent' ? 'Aluguel mensal' : 'Preço'}
+              label="Preço"
               name="price"
               type="text"
               inputMode="numeric"
@@ -505,10 +529,10 @@ export function PropertyForm({ property, defaultPropertyType, onSubmit, onCancel
           )}
         </div>
 
-        {isLand ? (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <div id="field-size">
             <Input
-              label="Área do terreno (m²)"
+              label="Área total (m²)"
               name="size"
               type="number"
               min="0"
@@ -520,12 +544,68 @@ export function PropertyForm({ property, defaultPropertyType, onSubmit, onCancel
               onChange={(e) => setSize(e.target.value)}
             />
           </div>
-        ) : (
-          <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-            <Input label="Quartos" name="rooms" type="number" min="0" value={rooms} onChange={(e) => setRooms(e.target.value)} />
-            <Input label="Banheiros" name="bathrooms" type="number" min="0" value={bathrooms} onChange={(e) => setBathrooms(e.target.value)} />
-            <Input label="Vagas" name="parking" type="number" min="0" value={parking} onChange={(e) => setParking(e.target.value)} />
-            <Input label="Área (m²)" name="size" type="number" min="0" step="0.01" value={size} onChange={(e) => setSize(e.target.value)} />
+          <Input
+            label="Frente (m)"
+            name="frontage"
+            type="number"
+            min="0"
+            step="0.01"
+            placeholder="Ex: 12"
+            value={frontage}
+            onChange={(e) => setFrontage(e.target.value)}
+          />
+          <Input
+            label="Fundo (m)"
+            name="depth"
+            type="number"
+            min="0"
+            step="0.01"
+            placeholder="Ex: 30"
+            value={depth}
+            onChange={(e) => setDepth(e.target.value)}
+          />
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <Select label="Zoneamento / uso" value={zoning} options={ZONING_OPTIONS} onChange={setZoning} />
+          <Select label="Topografia" value={topography} options={TOPOGRAPHY_OPTIONS} onChange={setTopography} />
+          <Select
+            label="Situação documental"
+            value={documentation}
+            options={DOCUMENTATION_OPTIONS}
+            onChange={setDocumentation}
+          />
+        </div>
+
+        <div>
+          <p className="mb-2 text-sm font-medium text-slate-700">Infraestrutura e condições</p>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+            <CheckboxChip label="Água" checked={hasWater} onChange={setHasWater} />
+            <CheckboxChip label="Energia" checked={hasElectricity} onChange={setHasElectricity} />
+            <CheckboxChip label="Esgoto" checked={hasSewage} onChange={setHasSewage} />
+            <CheckboxChip label="Rua asfaltada" checked={pavedStreet} onChange={setPavedStreet} />
+            <CheckboxChip label="Condomínio fechado" checked={gatedCommunity} onChange={setGatedCommunity} />
+            <CheckboxChip label="Aceita financiamento" checked={acceptsFinancing} onChange={setAcceptsFinancing} />
+          </div>
+        </div>
+
+        {(isLote || gatedCommunity) && (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <Input
+              label="Loteamento / empreendimento"
+              name="development_name"
+              placeholder="Ex: Residencial Jardim das Águas"
+              value={developmentName}
+              onChange={(e) => setDevelopmentName(e.target.value)}
+            />
+            <Input label="Quadra" name="block" placeholder="Ex: B" value={block} onChange={(e) => setBlock(e.target.value)} />
+            <Input
+              label="Lote nº"
+              name="lot_number"
+              placeholder="Ex: 14"
+              value={lotNumber}
+              onChange={(e) => setLotNumber(e.target.value)}
+            />
           </div>
         )}
 
@@ -533,25 +613,23 @@ export function PropertyForm({ property, defaultPropertyType, onSubmit, onCancel
           <Textarea
             label="Descrição"
             name="description"
-            placeholder={DESCRIPTION_PLACEHOLDERS[propertyType]}
+            placeholder={DESCRIPTION_PLACEHOLDER}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
           />
-          {(isLand ? LAND_TAGS : RESIDENTIAL_TAGS).length > 0 && (
-            <div className="mt-2 flex flex-wrap gap-1.5">
-              <span className="text-xs text-slate-500">Destaques:</span>
-              {(isLand ? LAND_TAGS : RESIDENTIAL_TAGS).map((tag) => (
-                <button
-                  key={tag}
-                  type="button"
-                  onClick={() => appendTag(tag)}
-                  className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-700 hover:bg-blue-100 hover:text-blue-800"
-                >
-                  + {tag}
-                </button>
-              ))}
-            </div>
-          )}
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            <span className="text-xs text-slate-500">Destaques:</span>
+            {LAND_TAGS.map((tag) => (
+              <button
+                key={tag}
+                type="button"
+                onClick={() => appendTag(tag)}
+                className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-700 hover:bg-blue-100 hover:text-blue-800"
+              >
+                + {tag}
+              </button>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -587,7 +665,7 @@ export function PropertyForm({ property, defaultPropertyType, onSubmit, onCancel
             </dl>
           ) : (
             <p className="mt-2 text-sm text-blue-800/80">
-              Ainda sem visitas ou cliques no WhatsApp. Compartilhe o link do imóvel para atrair interessados.
+              Ainda sem visitas ou cliques no WhatsApp. Compartilhe o link do anúncio para atrair interessados.
             </p>
           )}
         </section>
@@ -622,7 +700,7 @@ export function PropertyForm({ property, defaultPropertyType, onSubmit, onCancel
               ? 'Salvar alterações'
               : pendingPhotos.length > 0
                 ? `Criar com ${pendingPhotos.length} foto(s)`
-                : 'Criar imóvel'}
+                : 'Criar anúncio'}
         </button>
       </div>
     </form>

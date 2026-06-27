@@ -4,8 +4,7 @@ import { useState } from 'react'
 
 const NAV = [
   { label: 'Terrenos', href: '#buscar' },
-  { label: 'Imóveis', href: '#imoveis' },
-  { label: 'Aluguéis', href: '#buscar' },
+  { label: 'Lotes', href: '#imoveis' },
   { label: 'Sobre nós', href: '#sobre' },
   { label: 'Contato', href: '#contato' },
 ]

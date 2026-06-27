@@ -9,8 +9,13 @@ import { usePropertySeo } from '../hooks/usePageTitle'
 import { recordPropertyEvent } from '../services/analyticsService'
 import { getProperty } from '../services/propertiesService'
 import type { Property } from '../types/property'
-import { LISTING_LABELS } from '../types/property'
-import { formatArea, normalizePropertyType, propertyTypeLabel } from '../utils/propertyDisplay'
+import {
+  DOCUMENTATION_LABELS,
+  LISTING_LABELS,
+  TOPOGRAPHY_LABELS,
+  ZONING_LABELS,
+} from '../types/property'
+import { formatArea, formatDimensions, formatPricePerSqm, propertyTypeLabel } from '../utils/propertyDisplay'
 import { formatSocialProof } from '../utils/analytics'
 import { getAgentFirstName } from '../utils/agent'
 import { buildWhatsAppUrl, formatPrice, propertyWhatsAppMessage } from '../utils/format'
@@ -72,13 +77,13 @@ export function PropertyDetailPage() {
   if (error || !property) {
     return (
       <main className="mx-auto max-w-4xl px-4 py-20 text-center sm:px-6 xl:max-w-6xl">
-        <h1 className="text-2xl font-bold text-slate-900">Imóvel não encontrado</h1>
-        <p className="mt-2 text-slate-500">Este imóvel pode ter sido removido ou o link está incorreto.</p>
+        <h1 className="text-2xl font-bold text-slate-900">Anúncio não encontrado</h1>
+        <p className="mt-2 text-slate-500">Este terreno pode ter sido removido ou o link está incorreto.</p>
         <Link
           to="/"
           className="mt-6 inline-flex rounded-xl bg-blue-700 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-800"
         >
-          Voltar aos imóveis
+          Voltar aos terrenos
         </Link>
       </main>
     )
@@ -94,18 +99,35 @@ export function PropertyDetailPage() {
 
   const socialProof = formatSocialProof(property.stats?.views_7d ?? 0)
 
-  const isLand = normalizePropertyType(property.property_type) === 'land'
   const shareUrl = `${window.location.origin}/imovel/${property.id}`
+  const dimensions = formatDimensions(property.frontage, property.depth)
+  const pricePerSqm = formatPricePerSqm(property.price, property.size)
   const specs: { label: string; value: string | number }[] = []
-  if (!isLand && property.rooms != null) specs.push({ label: 'Quartos', value: property.rooms })
-  if (!isLand && property.bathrooms != null) specs.push({ label: 'Banheiros', value: property.bathrooms })
-  if (!isLand && property.parking != null) specs.push({ label: 'Vagas', value: property.parking })
   if (property.size != null) {
-    specs.push({
-      label: isLand ? 'Área do terreno' : 'Área',
-      value: formatArea(property.size) ?? `${property.size} m²`,
-    })
+    specs.push({ label: 'Área total', value: formatArea(property.size) ?? `${property.size} m²` })
   }
+  if (dimensions) specs.push({ label: 'Frente × Fundo', value: dimensions })
+  if (pricePerSqm) specs.push({ label: 'Preço por m²', value: pricePerSqm })
+  if (property.zoning) specs.push({ label: 'Zoneamento', value: ZONING_LABELS[property.zoning] })
+  if (property.topography) specs.push({ label: 'Topografia', value: TOPOGRAPHY_LABELS[property.topography] })
+  if (property.documentation) {
+    specs.push({ label: 'Documentação', value: DOCUMENTATION_LABELS[property.documentation] })
+  }
+
+  const infrastructure = [
+    property.has_water && 'Água',
+    property.has_electricity && 'Energia',
+    property.has_sewage && 'Esgoto',
+    property.paved_street && 'Rua asfaltada',
+    property.gated_community && 'Condomínio fechado',
+    property.accepts_financing && 'Aceita financiamento',
+  ].filter(Boolean) as string[]
+
+  const development = [
+    property.development_name,
+    property.block ? `Quadra ${property.block}` : null,
+    property.lot_number ? `Lote ${property.lot_number}` : null,
+  ].filter(Boolean) as string[]
 
   return (
     <>
@@ -114,7 +136,7 @@ export function PropertyDetailPage() {
           to="/"
           className="inline-flex items-center gap-1 text-sm font-medium text-slate-500 transition hover:text-slate-900"
         >
-          ← Voltar aos imóveis
+          ← Voltar aos terrenos
         </Link>
 
         <div className="mt-6">
@@ -138,10 +160,10 @@ export function PropertyDetailPage() {
               )}
             </div>
             <p className="mt-3 text-3xl font-bold text-slate-900">
-              {formatPrice(property.price, property.listing_type)}
+              {formatPrice(property.price)}
             </p>
             <h1 className="mt-2 text-2xl font-bold text-slate-900 sm:text-3xl">
-              {property.title || 'Imóvel disponível'}
+              {property.title || 'Terreno disponível'}
             </h1>
             {property.location && (
               <p className="mt-2 flex items-center gap-1.5 text-slate-500">
@@ -156,18 +178,41 @@ export function PropertyDetailPage() {
               </p>
             )}
 
+            {development.length > 0 && (
+              <p className="mt-2 text-sm font-medium text-slate-600">{development.join(' · ')}</p>
+            )}
+
             <div className="mt-4">
-              <SharePropertyButton title={property.title || 'Imóvel disponível'} url={shareUrl} />
+              <SharePropertyButton title={property.title || 'Terreno disponível'} url={shareUrl} />
             </div>
 
             {specs.length > 0 && (
-              <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
+              <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3">
                 {specs.map((spec) => (
                   <div key={spec.label} className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-center">
                     <p className="text-xs font-medium uppercase tracking-wide text-slate-400">{spec.label}</p>
                     <p className="mt-1 text-lg font-semibold text-slate-900">{spec.value}</p>
                   </div>
                 ))}
+              </div>
+            )}
+
+            {infrastructure.length > 0 && (
+              <div className="mt-6">
+                <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
+                  Infraestrutura e condições
+                </h2>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {infrastructure.map((item) => (
+                    <span
+                      key={item}
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-50 px-3 py-1.5 text-sm font-medium text-emerald-800 ring-1 ring-emerald-200/70"
+                    >
+                      <CheckIcon />
+                      {item}
+                    </span>
+                  ))}
+                </div>
               </div>
             )}
 
@@ -194,6 +239,18 @@ export function PropertyDetailPage() {
       </div>
       <div className="h-[calc(5rem+env(safe-area-inset-bottom))] md:hidden" aria-hidden="true" />
     </>
+  )
+}
+
+function CheckIcon() {
+  return (
+    <svg viewBox="0 0 20 20" className="h-4 w-4 shrink-0" fill="currentColor" aria-hidden="true">
+      <path
+        fillRule="evenodd"
+        d="M16.704 5.29a.75.75 0 010 1.06l-7.5 7.5a.75.75 0 01-1.06 0l-3.5-3.5a.75.75 0 111.06-1.06l2.97 2.97 6.97-6.97a.75.75 0 011.06 0z"
+        clipRule="evenodd"
+      />
+    </svg>
   )
 }
 

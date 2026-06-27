@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import { mediaUrl } from '../lib/api'
 import { PropertyForm } from '../components/properties/PropertyForm'
 import { PerformanceBar } from '../components/analytics/PerformanceBar'
-import { ListingTypeBadge, PropertyTypeBadge } from '../components/properties/PropertyTypeBadge'
+import { PropertyTypeBadge } from '../components/properties/PropertyTypeBadge'
 import { Button } from '../components/ui/Button'
 import { Modal } from '../components/ui/Modal'
 import { useAuth } from '../hooks/useAuth'
@@ -14,7 +14,7 @@ import {
   updateProperty,
 } from '../services/propertiesService'
 import type { Property, PropertyPayload, PropertyType } from '../types/property'
-import { LISTING_LABELS, PROPERTY_TYPE_LABELS } from '../types/property'
+import { PROPERTY_TYPE_LABELS } from '../types/property'
 import { formatPrice } from '../utils/format'
 import { formatWhatsAppPhone, getAgentInitials } from '../utils/agent'
 
@@ -33,7 +33,7 @@ export function PropertiesPage() {
   const [selected, setSelected] = useState<Property | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [toast, setToast] = useState('')
-  const [createPreset, setCreatePreset] = useState<PropertyType>('land')
+  const [createPreset, setCreatePreset] = useState<PropertyType>('terreno')
 
   const load = useCallback(async (currentPage = page) => {
     setLoading(true)
@@ -92,7 +92,7 @@ export function PropertiesPage() {
     }
   }, [searchParams, setSearchParams, properties, loading])
 
-  function openCreate(preset: PropertyType = 'land') {
+  function openCreate(preset: PropertyType = 'terreno') {
     setCreatePreset(preset)
     setSelected(null)
     setModalMode('create')
@@ -174,7 +174,7 @@ export function PropertiesPage() {
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="type-page-title font-semibold text-slate-900">
-            {isAdmin ? 'Todos os imóveis' : 'Meus anúncios'}
+            {isAdmin ? 'Todos os anúncios' : 'Meus anúncios'}
           </h1>
           <p className="type-page-lead text-slate-500">
             {total} {total === 1 ? 'anúncio' : 'anúncios'}
@@ -182,10 +182,10 @@ export function PropertiesPage() {
           </p>
         </div>
         <div className="grid grid-cols-1 gap-2 sm:flex sm:flex-wrap">
-          {(['land', 'house', 'apartment'] as PropertyType[]).map((type) => (
+          {(['terreno', 'lote'] as PropertyType[]).map((type) => (
             <Button
               key={type}
-              variant={type === 'land' ? 'primary' : 'secondary'}
+              variant={type === 'terreno' ? 'primary' : 'secondary'}
               className="w-full sm:w-auto"
               onClick={() => openCreate(type)}
             >
@@ -220,10 +220,10 @@ export function PropertiesPage() {
         ) : properties.length === 0 ? (
           <div className="px-6 py-16 text-center">
             <p className="text-slate-500">
-              {isAdmin ? 'Nenhum imóvel cadastrado.' : 'Você ainda não publicou nenhum anúncio.'}
+              {isAdmin ? 'Nenhum terreno cadastrado.' : 'Você ainda não publicou nenhum anúncio.'}
             </p>
             <Button className="mt-4" onClick={() => openCreate()}>
-              {isAdmin ? 'Cadastrar imóvel' : 'Publicar primeiro anúncio'}
+              {isAdmin ? 'Cadastrar terreno' : 'Publicar primeiro anúncio'}
             </Button>
           </div>
         ) : (
@@ -281,9 +281,6 @@ export function PropertiesPage() {
                         <p className="font-semibold tabular-nums text-slate-900">
                           {formatPrice(property.price)}
                         </p>
-                        {property.listing_type === 'rent' && (
-                          <p className="type-meta text-slate-500">por mês</p>
-                        )}
                       </td>
                       <td className="px-5 py-4 align-top xl:px-6">
                         <PerformanceBar stats={property.stats} variant="inline" />
@@ -414,7 +411,6 @@ function PropertyListingCell({ property }: { property: Property }) {
             {property.title || <span className="italic font-normal text-slate-400">Sem título</span>}
           </p>
           <PropertyTypeBadge type={property.property_type} />
-          <ListingTypeBadge type={property.listing_type} />
         </div>
         {property.location && (
           <p className="mt-1 truncate type-meta text-slate-500">{property.location}</p>
@@ -496,14 +492,10 @@ function PropertyMobileCard({
           </div>
           <p className="mt-1 text-sm font-semibold tabular-nums text-slate-900">
             {formatPrice(property.price)}
-            {property.listing_type === 'rent' && (
-              <span className="text-xs font-normal text-slate-500"> /mês</span>
-            )}
           </p>
-          <p className="mt-0.5 truncate type-meta text-slate-500">
-            {LISTING_LABELS[property.listing_type]}
-            {property.location ? ` · ${property.location}` : ''}
-          </p>
+          {property.location && (
+            <p className="mt-0.5 truncate type-meta text-slate-500">{property.location}</p>
+          )}
           <div className="mt-2.5">
             <PerformanceBar stats={property.stats} variant="inline" />
           </div>

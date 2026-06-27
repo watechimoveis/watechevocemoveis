@@ -11,8 +11,8 @@ import { ActionCard } from '../ui/ActionCard'
 export function AdminDashboard() {
   const [totalProperties, setTotalProperties] = useState(0)
   const [totalAgents, setTotalAgents] = useState(0)
-  const [saleCount, setSaleCount] = useState(0)
-  const [rentCount, setRentCount] = useState(0)
+  const [terrenoCount, setTerrenoCount] = useState(0)
+  const [loteCount, setLoteCount] = useState(0)
   const [totalViews7d, setTotalViews7d] = useState(0)
   const [totalWhatsApp7d, setTotalWhatsApp7d] = useState(0)
   const [analytics, setAnalytics] = useState<AnalyticsOverview | null>(null)
@@ -29,8 +29,8 @@ export function AdminDashboard() {
         ])
         setTotalProperties(properties.total)
         setTotalAgents(agents.filter((a) => a.is_active).length)
-        setSaleCount(properties.items.filter((p: Property) => p.listing_type === 'sale').length)
-        setRentCount(properties.items.filter((p: Property) => p.listing_type === 'rent').length)
+        setTerrenoCount(properties.items.filter((p: Property) => p.property_type === 'terreno').length)
+        setLoteCount(properties.items.filter((p: Property) => p.property_type === 'lote').length)
         setTotalViews7d(overview.totals.views_7d)
         setTotalWhatsApp7d(overview.totals.whatsapp_clicks_7d)
         setAnalytics(overview)
@@ -52,8 +52,8 @@ export function AdminDashboard() {
       <div className="-mx-4 flex gap-3 overflow-x-auto scroll-snap-x px-4 pb-1 md:mx-0 md:grid md:grid-cols-3 md:overflow-visible md:px-0 md:pb-0 xl:grid-cols-6">
         <StatCard label="Anúncios" value={loading ? '—' : totalProperties} className="scroll-snap-item min-w-[9rem] shrink-0 md:min-w-0 md:shrink" />
         <StatCard label="Corretores ativos" value={loading ? '—' : totalAgents} className="scroll-snap-item min-w-[9rem] shrink-0 md:min-w-0 md:shrink" />
-        <StatCard label="Venda" value={loading ? '—' : saleCount} className="scroll-snap-item min-w-[9rem] shrink-0 md:min-w-0 md:shrink" />
-        <StatCard label="Aluguel" value={loading ? '—' : rentCount} className="scroll-snap-item min-w-[9rem] shrink-0 md:min-w-0 md:shrink" />
+        <StatCard label="Terrenos" value={loading ? '—' : terrenoCount} className="scroll-snap-item min-w-[9rem] shrink-0 md:min-w-0 md:shrink" />
+        <StatCard label="Lotes" value={loading ? '—' : loteCount} className="scroll-snap-item min-w-[9rem] shrink-0 md:min-w-0 md:shrink" />
         <StatCard label="Views (7d)" value={loading ? '—' : totalViews7d} className="scroll-snap-item min-w-[9rem] shrink-0 md:min-w-0 md:shrink" />
         <StatCard label="WhatsApp (7d)" value={loading ? '—' : totalWhatsApp7d} highlight className="scroll-snap-item min-w-[9rem] shrink-0 md:min-w-0 md:shrink" />
       </div>
@@ -77,15 +77,15 @@ export function AdminDashboard() {
           />
           <ActionCard
             to="/imoveis?novo=1"
-            icon="🏠"
+            icon="🏞️"
             title="Novo anúncio"
-            description="Publicar imóvel em nome de um corretor"
+            description="Publicar terreno ou lote em nome de um corretor"
           />
           <ActionCard
             to="/imoveis"
             icon="📋"
-            title="Ver todos os imóveis"
-            description="Listar, editar e moderar anúncios"
+            title="Ver todos os anúncios"
+            description="Listar, editar e moderar terrenos e lotes"
           />
         </div>
       </section>

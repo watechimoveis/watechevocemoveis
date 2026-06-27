@@ -70,11 +70,10 @@ export function HomePage() {
                 key={filter.key}
                 type="button"
                 onClick={() => onRemoveFilter(filter)}
-                disabled={filter.key === 'tipo'}
-                className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-700 shadow-sm ring-1 ring-slate-200 disabled:opacity-80"
+                className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-700 shadow-sm ring-1 ring-slate-200"
               >
                 {filter.label}
-                {filter.key !== 'tipo' && <span className="text-slate-400">×</span>}
+                <span className="text-slate-400">×</span>
               </button>
             ))}
           </div>
@@ -108,7 +107,7 @@ export function HomePage() {
             <p className="mt-2 text-sm text-slate-500">
               {hasActiveSearchFilters(applied)
                 ? 'Tente ampliar a busca ou ajustar os filtros acima.'
-                : 'Em breve novos terrenos e imóveis com contato direto ao corretor.'}
+                : 'Em breve novos terrenos e lotes com contato direto ao corretor.'}
             </p>
           </div>
         ) : !error ? (
@@ -150,8 +149,8 @@ export function HomePage() {
         <div className="mx-auto max-w-3xl px-4 text-center sm:px-6">
           <h2 className="text-2xl font-bold text-slate-900">Sobre o {BRAND.name}</h2>
           <p className="mt-4 text-slate-600 leading-relaxed">
-            {BRAND.tagline} Plataforma focada em terrenos e imóveis, com gestão integrada para
-            corretores e contato direto via WhatsApp para quem busca o imóvel ideal.
+            {BRAND.tagline} Plataforma especializada em terrenos e lotes, com gestão integrada para
+            corretores e contato direto via WhatsApp para quem busca a área ideal.
           </p>
         </div>
       </section>
@@ -159,12 +158,23 @@ export function HomePage() {
       <section id="contato" className="border-t border-slate-200 bg-slate-900 py-12">
         <div className="mx-auto max-w-7xl px-4 text-center sm:px-6">
           <p className="text-sm text-slate-400">
-            © {new Date().getFullYear()} {BRAND.name} · Terrenos, imóveis e aluguéis
+            © {new Date().getFullYear()} {BRAND.name} · Terrenos e lotes à venda
           </p>
           <p className="mt-2 text-xs text-slate-500">
             Corretor?{' '}
             <a href="/admin" className="font-medium text-amber-400 hover:text-amber-300">
               Acesse o painel
+            </a>
+          </p>
+          <p className="mt-2 text-xs text-slate-500">
+            Desenvolvido por{' '}
+            <a
+              href="https://www.watechevoce.com.br"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium text-amber-400 hover:text-amber-300"
+            >
+              W.A.Techevoce
             </a>
           </p>
         </div>

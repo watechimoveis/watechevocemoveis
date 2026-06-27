@@ -18,14 +18,16 @@ class PropertyRepository:
     def _apply_filters(self, stmt, filters: PropertySearchFilters, *, public_only: bool = False):
         if public_only:
             stmt = stmt.where(Property.agent_whatsapp.isnot(None), Property.agent_whatsapp != "")
-        if filters.listing_type:
-            stmt = stmt.where(Property.listing_type == filters.listing_type)
         if filters.property_type:
             stmt = stmt.where(Property.property_type == filters.property_type)
-        if filters.category == "land":
-            stmt = stmt.where(Property.property_type == "land")
-        elif filters.category == "residential":
-            stmt = stmt.where(Property.property_type.in_(("house", "apartment")))
+        if filters.zoning:
+            stmt = stmt.where(Property.zoning == filters.zoning)
+        if filters.documentation:
+            stmt = stmt.where(Property.documentation == filters.documentation)
+        if filters.gated_community is not None:
+            stmt = stmt.where(Property.gated_community.is_(filters.gated_community))
+        if filters.accepts_financing is not None:
+            stmt = stmt.where(Property.accepts_financing.is_(filters.accepts_financing))
         if filters.min_price is not None:
             stmt = stmt.where(Property.price >= filters.min_price)
         if filters.max_price is not None:
@@ -33,10 +35,10 @@ class PropertyRepository:
         if filters.location:
             term = f"%{filters.location.strip()}%"
             stmt = stmt.where(Property.location.ilike(term))
-        if filters.min_rooms is not None:
-            stmt = stmt.where(Property.rooms >= filters.min_rooms)
         if filters.min_size is not None:
             stmt = stmt.where(Property.size >= filters.min_size)
+        if filters.max_size is not None:
+            stmt = stmt.where(Property.size <= filters.max_size)
         return stmt
 
     def _apply_sort(self, stmt, sort: str):
@@ -127,7 +129,6 @@ class PropertyRepository:
                 Property.id != property_id,
                 Property.agent_whatsapp.isnot(None),
                 Property.agent_whatsapp != "",
-                Property.listing_type == base.listing_type,
                 Property.property_type == base.property_type,
                 *extra_filters,
             )
@@ -143,8 +144,11 @@ class PropertyRepository:
             high = base.price * Decimal("1.3")
             filters.append(Property.price >= low)
             filters.append(Property.price <= high)
-        if base.rooms is not None:
-            filters.append(Property.rooms >= base.rooms)
+        if base.size is not None:
+            low_size = base.size * Decimal("0.6")
+            high_size = base.size * Decimal("1.4")
+            filters.append(Property.size >= low_size)
+            filters.append(Property.size <= high_size)
 
         items = _query(*filters) if filters else _query()
         if items:

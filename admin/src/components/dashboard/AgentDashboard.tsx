@@ -8,7 +8,7 @@ import { getAnalyticsOverview } from '../../services/analyticsService'
 import { listProperties } from '../../services/propertiesService'
 import type { AnalyticsOverview } from '../../types/analytics'
 import type { Property } from '../../types/property'
-import { LISTING_LABELS, PROPERTY_TYPE_LABELS } from '../../types/property'
+import { PROPERTY_TYPE_LABELS } from '../../types/property'
 import { whatsappConversionRate } from '../../utils/analytics'
 import { getAgentInitials } from '../../utils/agent'
 import { formatPrice } from '../../utils/format'
@@ -140,9 +140,7 @@ export function AgentDashboard() {
                       {property.title || 'Sem título'}
                     </p>
                     <p className="truncate type-page-lead text-slate-500">
-                      {PROPERTY_TYPE_LABELS[property.property_type] || 'Imóvel'}
-                      {' · '}
-                      {property.listing_type === 'rent' ? LISTING_LABELS.rent : LISTING_LABELS.sale}
+                      {PROPERTY_TYPE_LABELS[property.property_type] || 'Terreno'}
                       {property.location ? ` · ${property.location}` : ''}
                       {' · '}
                       {formatPrice(property.price)}

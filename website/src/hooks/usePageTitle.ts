@@ -1,15 +1,15 @@
 import { useEffect } from 'react'
 import type { Property } from '../types/property'
 import { getCoverImage } from '../types/property'
-import { formatPricePerSqm, normalizePropertyType, propertyTypeLabel } from '../utils/propertyDisplay'
+import { formatPricePerSqm, propertyTypeLabel } from '../utils/propertyDisplay'
 import { mediaUrl } from '../lib/api'
 import { formatPrice } from '../utils/format'
 
 import { BRAND } from '../lib/brand'
 
-const DEFAULT_TITLE = `${BRAND.name} — Encontre seu imóvel`
+const DEFAULT_TITLE = `${BRAND.name} — Terrenos e lotes à venda`
 const DEFAULT_DESCRIPTION =
-  'Encontre terrenos e imóveis para compra ou aluguel e fale direto com o corretor responsável pelo WhatsApp.'
+  'Encontre terrenos e lotes à venda e fale direto com o corretor responsável pelo WhatsApp.'
 
 function upsertMeta(name: string, content: string, property?: string) {
   const attr = property ? 'property' : 'name'
@@ -29,20 +29,17 @@ function removeMeta(name: string, property?: string) {
 }
 
 function buildDescription(property: Property): string {
-  const type = normalizePropertyType(property.property_type)
-  const isLand = type === 'land'
-  const sqm = isLand ? formatPricePerSqm(property.price, property.size) : null
+  const sqm = formatPricePerSqm(property.price, property.size)
   const parts = [
-    propertyTypeLabel(type),
-    formatPrice(property.price, property.listing_type),
+    propertyTypeLabel(property.property_type),
+    formatPrice(property.price),
     sqm,
     property.location,
-    !isLand && property.rooms != null ? `${property.rooms} quartos` : null,
     property.size != null ? `${property.size} m²` : null,
   ].filter(Boolean)
   const summary = parts.join(' · ')
   const agent = property.agent_name ? ` Fale com ${property.agent_name} pelo WhatsApp.` : ''
-  return `${property.title || 'Imóvel disponível'}${summary ? ` — ${summary}` : ''}.${agent}`
+  return `${property.title || 'Terreno disponível'}${summary ? ` — ${summary}` : ''}.${agent}`
 }
 
 export function usePropertySeo(property: Property | null | undefined) {
@@ -60,7 +57,7 @@ export function usePropertySeo(property: Property | null | undefined) {
       }
     }
 
-    const title = `${property.title || 'Imóvel'} · ${BRAND.name}`
+    const title = `${property.title || 'Terreno'} · ${BRAND.name}`
     const description = buildDescription(property)
     const image = mediaUrl(getCoverImage(property))
     const url = `${window.location.origin}/imovel/${property.id}`

@@ -1,17 +1,18 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import type { ListingType, Property, PropertyCategory, SortOption } from '../types/property'
+import type { Property, PropertyType, SortOption, Zoning } from '../types/property'
 import { searchProperties } from '../services/propertiesService'
 import { defaultSearchState } from '../utils/searchLabels'
 
 export interface SearchState {
-  listingType: ListingType
-  category: PropertyCategory | ''
+  propertyType: PropertyType | ''
+  zoning: Zoning | ''
+  gatedCommunity: boolean
   location: string
   minPrice: string
   maxPrice: string
-  minRooms: string
   minSize: string
+  maxSize: string
   sort: SortOption
 }
 
@@ -34,13 +35,14 @@ export function usePropertySearch() {
       const parsed = parseParams(params)
       const data = await searchProperties({
         page: currentPage,
-        listing_type: parsed.listingType,
-        category: parsed.category || undefined,
+        property_type: parsed.propertyType || undefined,
+        zoning: parsed.zoning || undefined,
+        gated_community: parsed.gatedCommunity || undefined,
         location: parsed.location.trim() || undefined,
         min_price: parsed.minPrice ? Number(parsed.minPrice) : undefined,
         max_price: parsed.maxPrice ? Number(parsed.maxPrice) : undefined,
-        min_rooms: parsed.minRooms ? Number(parsed.minRooms) : undefined,
         min_size: parsed.minSize ? Number(parsed.minSize) : undefined,
+        max_size: parsed.maxSize ? Number(parsed.maxSize) : undefined,
         sort: parsed.sort,
       })
       setProperties(data.items)
@@ -54,7 +56,7 @@ export function usePropertySearch() {
       if (err instanceof TypeError) {
         setError('Não foi possível conectar ao servidor. Aguarde alguns segundos e tente novamente.')
       } else {
-        setError('Não foi possível carregar os imóveis.')
+        setError('Não foi possível carregar os terrenos.')
       }
     } finally {
       setLoading(false)
@@ -90,15 +92,14 @@ export function usePropertySearch() {
   const removeFilter = useCallback(
     (key: string) => {
       const next = { ...applied }
-      if (key === 'tipo') {
-        next.listingType = 'sale'
-        next.category = 'land'
-      }
+      if (key === 'tipo') next.propertyType = ''
+      if (key === 'zona') next.zoning = ''
+      if (key === 'cond') next.gatedCommunity = false
       if (key === 'local') next.location = ''
       if (key === 'min') next.minPrice = ''
       if (key === 'max') next.maxPrice = ''
-      if (key === 'quartos') next.minRooms = ''
       if (key === 'area') next.minSize = ''
+      if (key === 'areaMax') next.maxSize = ''
       if (key === 'ordem') next.sort = 'recent'
       setDraft(next)
       setSearchParams(buildParams(next))
@@ -132,30 +133,34 @@ export function usePropertySearch() {
 
 function buildParams(state: SearchState): URLSearchParams {
   const next = new URLSearchParams()
-  next.set('tipo', state.listingType)
-  if (state.category) next.set('cat', state.category)
+  if (state.propertyType) next.set('tipo', state.propertyType)
+  if (state.zoning) next.set('zona', state.zoning)
+  if (state.gatedCommunity) next.set('cond', '1')
   if (state.location.trim()) next.set('local', state.location.trim())
   if (state.minPrice) next.set('min', state.minPrice)
   if (state.maxPrice) next.set('max', state.maxPrice)
-  if (state.minRooms) next.set('quartos', state.minRooms)
   if (state.minSize) next.set('area', state.minSize)
+  if (state.maxSize) next.set('areaMax', state.maxSize)
   next.set('ordem', state.sort)
   next.set('page', '1')
   return next
 }
 
+const ZONINGS: Zoning[] = ['residential', 'commercial', 'industrial', 'rural', 'mixed']
+
 function parseParams(params: URLSearchParams): SearchState {
   const tipo = params.get('tipo')
-  const cat = params.get('cat')
+  const zona = params.get('zona')
   const ordem = params.get('ordem')
   return {
-    listingType: tipo === 'rent' ? 'rent' : 'sale',
-    category: cat === 'residential' || cat === 'land' ? cat : tipo === 'rent' ? '' : 'land',
+    propertyType: tipo === 'terreno' || tipo === 'lote' ? tipo : '',
+    zoning: zona && (ZONINGS as string[]).includes(zona) ? (zona as Zoning) : '',
+    gatedCommunity: params.get('cond') === '1',
     location: params.get('local') || '',
     minPrice: params.get('min') || '',
     maxPrice: params.get('max') || '',
-    minRooms: params.get('quartos') || '',
     minSize: params.get('area') || '',
+    maxSize: params.get('areaMax') || '',
     sort: ordem === 'price_asc' || ordem === 'price_desc' ? ordem : 'recent',
   }
 }

@@ -40,27 +40,35 @@ def create_property(
 def list_properties(
     page: int = Query(default=1, ge=1),
     limit: int = Query(default=20, ge=1, le=100),
-    listing_type: str | None = Query(default=None, pattern="^(sale|rent)$"),
-    property_type: str | None = Query(default=None, pattern="^(house|apartment|land)$"),
-    category: str | None = Query(default=None, pattern="^(land|residential)$"),
+    property_type: str | None = Query(default=None, pattern="^(terreno|lote)$"),
+    zoning: str | None = Query(
+        default=None, pattern="^(residential|commercial|industrial|rural|mixed)$"
+    ),
+    documentation: str | None = Query(
+        default=None, pattern="^(deed|registration|contract|financing)$"
+    ),
+    gated_community: bool | None = Query(default=None),
+    accepts_financing: bool | None = Query(default=None),
     min_price: Decimal | None = Query(default=None, ge=0),
     max_price: Decimal | None = Query(default=None, ge=0),
     location: str | None = Query(default=None, max_length=120),
-    min_rooms: int | None = Query(default=None, ge=1, le=20),
     min_size: int | None = Query(default=None, ge=1),
+    max_size: int | None = Query(default=None, ge=1),
     sort: str = Query(default="recent", pattern="^(recent|price_asc|price_desc)$"),
     user: CurrentUser | None = Depends(get_optional_user),
     controller: PropertyController = Depends(get_controller),
 ):
     filters = PropertySearchFilters(
-        listing_type=listing_type,
         property_type=property_type,
-        category=category,
+        zoning=zoning,
+        documentation=documentation,
+        gated_community=gated_community,
+        accepts_financing=accepts_financing,
         min_price=min_price,
         max_price=max_price,
         location=location,
-        min_rooms=min_rooms,
         min_size=min_size,
+        max_size=max_size,
         sort=sort,
     )
     return controller.list_properties(page, limit, user, filters)

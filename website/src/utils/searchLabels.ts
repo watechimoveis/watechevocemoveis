@@ -1,5 +1,5 @@
 import type { SearchState } from '../hooks/usePropertySearch'
-import { LISTING_LABELS } from '../types/property'
+import { PROPERTY_TYPE_LABELS, ZONING_LABELS } from '../types/property'
 import { formatPriceDigits } from './priceInput'
 
 export interface ActiveFilter {
@@ -7,20 +7,18 @@ export interface ActiveFilter {
   label: string
 }
 
-function listingFilterLabel(state: SearchState): string {
-  if (state.listingType === 'rent') return 'Aluguéis'
-  if (state.category === 'residential') return `Imóveis · ${LISTING_LABELS.sale}`
-  return `Terrenos · ${LISTING_LABELS.sale}`
-}
-
 export function buildActiveFilters(state: SearchState): ActiveFilter[] {
   const filters: ActiveFilter[] = []
 
-  filters.push({
-    key: 'tipo',
-    label: listingFilterLabel(state),
-  })
-
+  if (state.propertyType) {
+    filters.push({ key: 'tipo', label: PROPERTY_TYPE_LABELS[state.propertyType] })
+  }
+  if (state.zoning) {
+    filters.push({ key: 'zona', label: ZONING_LABELS[state.zoning] })
+  }
+  if (state.gatedCommunity) {
+    filters.push({ key: 'cond', label: 'Condomínio fechado' })
+  }
   if (state.location.trim()) {
     filters.push({ key: 'local', label: state.location.trim() })
   }
@@ -30,11 +28,11 @@ export function buildActiveFilters(state: SearchState): ActiveFilter[] {
   if (state.maxPrice) {
     filters.push({ key: 'max', label: `Máx. ${formatPriceDigits(state.maxPrice)}` })
   }
-  if (state.minRooms) {
-    filters.push({ key: 'quartos', label: `${state.minRooms}+ quartos` })
-  }
   if (state.minSize) {
     filters.push({ key: 'area', label: `≥ ${Number(state.minSize).toLocaleString('pt-BR')} m²` })
+  }
+  if (state.maxSize) {
+    filters.push({ key: 'areaMax', label: `≤ ${Number(state.maxSize).toLocaleString('pt-BR')} m²` })
   }
   if (state.sort !== 'recent') {
     const sortLabels = { price_asc: 'Menor preço', price_desc: 'Maior preço' } as const
@@ -46,13 +44,14 @@ export function buildActiveFilters(state: SearchState): ActiveFilter[] {
 
 export function defaultSearchState(): SearchState {
   return {
-    listingType: 'sale',
-    category: 'land',
+    propertyType: '',
+    zoning: '',
+    gatedCommunity: false,
     location: '',
     minPrice: '',
     maxPrice: '',
-    minRooms: '',
     minSize: '',
+    maxSize: '',
     sort: 'recent',
   }
 }
