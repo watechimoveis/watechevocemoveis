@@ -9,6 +9,8 @@ interface AuthContextValue {
   isAuthenticated: boolean
   isAdmin: boolean
   isAgent: boolean
+  isFinancial: boolean
+  canAccessFinancial: boolean
   login: (email: string, password: string) => Promise<void>
   establishSession: (token: string, sessionUser: User) => void
   updateUser: (sessionUser: User) => void
@@ -51,7 +53,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = useCallback(async (loginEmail: string, password: string) => {
     const data = await loginRequest(loginEmail, password)
     establishSession(data.access_token, data.user)
-    navigate('/', { replace: true })
+    const destination = data.user.role === 'financial' ? '/financeiro' : '/'
+    navigate(destination, { replace: true })
   }, [navigate, establishSession])
 
   const logout = useCallback(() => {
@@ -66,6 +69,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isAuthenticated,
       isAdmin: user?.role === 'admin',
       isAgent: user?.role === 'agent',
+      isFinancial: user?.role === 'financial',
+      canAccessFinancial: user?.role === 'admin' || user?.role === 'financial',
       login,
       establishSession,
       updateUser,

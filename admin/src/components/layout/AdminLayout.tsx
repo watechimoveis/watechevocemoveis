@@ -5,8 +5,9 @@ import { getAgentInitials } from '../../utils/agent'
 import { Button } from '../ui/Button'
 
 export function AdminLayout() {
-  const { user, logout, isAdmin } = useAuth()
+  const { user, logout, isAdmin, isAgent, canAccessFinancial } = useAuth()
   const location = useLocation()
+  const roleLabel = isAdmin ? 'Admin' : isAgent ? 'Corretor' : 'Financeiro'
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -20,12 +21,19 @@ export function AdminLayout() {
               <NavLink to="/" current={location.pathname} exact>
                 Início
               </NavLink>
-              <NavLink to="/imoveis" current={location.pathname}>
-                {isAdmin ? 'Imóveis' : 'Meus anúncios'}
-              </NavLink>
+              {(isAdmin || isAgent) && (
+                <NavLink to="/imoveis" current={location.pathname}>
+                  {isAdmin ? 'Imóveis' : 'Meus anúncios'}
+                </NavLink>
+              )}
+              {canAccessFinancial && (
+                <NavLink to="/financeiro" current={location.pathname}>
+                  Financeiro
+                </NavLink>
+              )}
               {isAdmin && (
-                <NavLink to="/corretores" current={location.pathname}>
-                  Corretores
+                <NavLink to="/equipe" current={location.pathname}>
+                  Equipe
                 </NavLink>
               )}
             </nav>
@@ -39,7 +47,7 @@ export function AdminLayout() {
                 <div className="flex items-center justify-end gap-2">
                   <p className="truncate text-sm font-medium text-slate-900 xl:text-base">{user?.name}</p>
                   <span className="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-[0.6875rem] font-semibold uppercase tracking-wide text-slate-600 xl:text-xs">
-                    {isAdmin ? 'Admin' : 'Corretor'}
+                    {roleLabel}
                   </span>
                 </div>
                 <p className="mt-0.5 truncate type-meta text-slate-500 lg:max-w-[14rem] xl:max-w-[18rem]">
@@ -65,9 +73,14 @@ export function AdminLayout() {
       >
         <div className="mx-auto flex max-w-lg items-stretch justify-around px-2 pt-1">
           <BottomNavLink to="/" current={location.pathname} exact label="Início" icon="home" />
-          <BottomNavLink to="/imoveis" current={location.pathname} label={isAdmin ? 'Imóveis' : 'Anúncios'} icon="properties" />
+          {(isAdmin || isAgent) && (
+            <BottomNavLink to="/imoveis" current={location.pathname} label={isAdmin ? 'Imóveis' : 'Anúncios'} icon="properties" />
+          )}
+          {canAccessFinancial && (
+            <BottomNavLink to="/financeiro" current={location.pathname} label="Financeiro" icon="finance" />
+          )}
           {isAdmin && (
-            <BottomNavLink to="/corretores" current={location.pathname} label="Corretores" icon="agents" />
+            <BottomNavLink to="/equipe" current={location.pathname} label="Equipe" icon="agents" />
           )}
         </div>
       </nav>
@@ -113,7 +126,7 @@ function BottomNavLink({
   label: string
   current: string
   exact?: boolean
-  icon: 'home' | 'properties' | 'agents'
+  icon: 'home' | 'properties' | 'agents' | 'finance'
 }) {
   const isActive = exact ? current === to : to === '/' ? current === '/' : current.startsWith(to)
 
@@ -130,7 +143,7 @@ function BottomNavLink({
   )
 }
 
-function NavIcon({ type, active }: { type: 'home' | 'properties' | 'agents'; active: boolean }) {
+function NavIcon({ type, active }: { type: 'home' | 'properties' | 'agents' | 'finance'; active: boolean }) {
   const className = `h-6 w-6 ${active ? 'text-blue-600' : 'text-slate-400'}`
   if (type === 'home') {
     return (
@@ -154,15 +167,29 @@ function NavIcon({ type, active }: { type: 'home' | 'properties' | 'agents'; act
       </svg>
     )
   }
-  return (
-    <svg viewBox="0 0 24 24" className={className} fill={active ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={active ? 0 : 1.75}>
-      {active ? (
-        <path fillRule="evenodd" d="M8.25 6.375a3.375 3.375 0 117.5 0 3.375 3.375 0 01-7.5 0zM15 6.375a3.375 3.375 0 117.5 0 3.375 3.375 0 01-7.5 0zM4.125 6.375a3.375 3.375 0 117.5 0 3.375 3.375 0 01-7.5 0zM1.5 19.125a7.125 7.125 0 0114.25 0v.003l-.001.119a.75.75 0 01-.363.63 13.067 13.067 0 01-6.761 1.873c-2.472 0-4.786-.684-6.76-1.873a.75.75 0 01-.364-.63l-.001-.122zM17.25 19.128l-.001.144a2.25 2.25 0 01-.233.96 10.088 10.088 0 005.06-1.01.75.75 0 00.42-.643 4.875 4.875 0 00-6.957-4.611 8.586 8.586 0 011.71 5.157v.003z" clipRule="evenodd" />
-      ) : (
-        <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
-      )}
-    </svg>
-  )
+  if (type === 'agents') {
+    return (
+      <svg viewBox="0 0 24 24" className={className} fill={active ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={active ? 0 : 1.75}>
+        {active ? (
+          <path fillRule="evenodd" d="M8.25 6.375a3.375 3.375 0 117.5 0 3.375 3.375 0 01-7.5 0zM15 6.375a3.375 3.375 0 117.5 0 3.375 3.375 0 01-7.5 0zM4.125 6.375a3.375 3.375 0 117.5 0 3.375 3.375 0 01-7.5 0zM1.5 19.125a7.125 7.125 0 0114.25 0v.003l-.001.119a.75.75 0 01-.363.63 13.067 13.067 0 01-6.761 1.873c-2.472 0-4.786-.684-6.76-1.873a.75.75 0 01-.364-.63l-.001-.122zM17.25 19.128l-.001.144a2.25 2.25 0 01-.233.96 10.088 10.088 0 005.06-1.01.75.75 0 00.42-.643 4.875 4.875 0 00-6.957-4.611 8.586 8.586 0 011.71 5.157v.003z" clipRule="evenodd" />
+        ) : (
+          <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+        )}
+      </svg>
+    )
+  }
+  if (type === 'finance') {
+    return (
+      <svg viewBox="0 0 24 24" className={className} fill={active ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={active ? 0 : 1.75}>
+        {active ? (
+          <path d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
+        ) : (
+          <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
+        )}
+      </svg>
+    )
+  }
+  return null
 }
 
 export function ProtectedRoute() {
@@ -178,8 +205,25 @@ export function AdminOnlyRoute() {
   return <AdminLayout />
 }
 
+export function AgentOrAdminRoute() {
+  const { isAuthenticated, isAdmin, isAgent } = useAuth()
+  if (!isAuthenticated) return <Navigate to="/login" replace />
+  if (!isAdmin && !isAgent) return <Navigate to="/financeiro" replace />
+  return <AdminLayout />
+}
+
+export function FinancialOrAdminRoute() {
+  const { isAuthenticated, canAccessFinancial } = useAuth()
+  if (!isAuthenticated) return <Navigate to="/login" replace />
+  if (!canAccessFinancial) return <Navigate to="/" replace />
+  return <AdminLayout />
+}
+
 export function PublicRoute() {
-  const { isAuthenticated } = useAuth()
-  if (isAuthenticated) return <Navigate to="/" replace />
+  const { isAuthenticated, user } = useAuth()
+  if (isAuthenticated) {
+    const destination = user?.role === 'financial' ? '/financeiro' : '/'
+    return <Navigate to={destination} replace />
+  }
   return <Outlet />
 }

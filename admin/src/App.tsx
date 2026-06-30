@@ -1,8 +1,10 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
-import { ProtectedRoute, PublicRoute, AdminOnlyRoute } from './components/layout/AdminLayout'
+import { ProtectedRoute, PublicRoute, AdminOnlyRoute, AgentOrAdminRoute, FinancialOrAdminRoute } from './components/layout/AdminLayout'
 import { AuthProvider } from './hooks/useAuth'
 import { AgentsPage } from './pages/AgentsPage'
 import { DashboardPage } from './pages/DashboardPage'
+import { FinancePage } from './pages/FinancePage'
+import { DevelopmentsPage } from './pages/DevelopmentsPage'
 import { LoginPage } from './pages/LoginPage'
 import { PropertiesPage } from './pages/PropertiesPage'
 
@@ -16,9 +18,16 @@ export default function App() {
           </Route>
           <Route element={<ProtectedRoute />}>
             <Route path="/" element={<DashboardPage />} />
+          </Route>
+          <Route element={<AgentOrAdminRoute />}>
             <Route path="/imoveis" element={<PropertiesPage />} />
           </Route>
+          <Route element={<FinancialOrAdminRoute />}>
+            <Route path="/financeiro" element={<FinancePage />} />
+            <Route path="/financeiro/loteamentos" element={<DevelopmentsPage />} />
+          </Route>
           <Route element={<AdminOnlyRoute />}>
+            <Route path="/equipe" element={<AgentsPage />} />
             <Route path="/corretores" element={<AgentsPage />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />

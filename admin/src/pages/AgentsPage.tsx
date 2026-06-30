@@ -3,10 +3,11 @@ import { useSearchParams } from 'react-router-dom'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
 import { Modal } from '../components/ui/Modal'
-import { createAgent, listAgents, updateAgent } from '../services/agentsService'
+import { createStaff, listStaff, updateStaff } from '../services/staffService'
 import { HttpError } from '../services/api'
-import type { AgentPayload } from '../types/user'
+import type { StaffPayload } from '../types/user'
 import type { User } from '../types/user'
+import { ROLE_LABELS } from '../types/user'
 import { formatWhatsAppPhone, getAgentInitials } from '../utils/agent'
 
 type ModalMode = 'create' | 'edit' | null
@@ -26,15 +27,18 @@ export function AgentsPage() {
   const [password, setPassword] = useState('')
   const [creci, setCreci] = useState('')
   const [whatsapp, setWhatsapp] = useState('')
+  const [role, setRole] = useState<'agent' | 'financial'>('agent')
   const [isActive, setIsActive] = useState(true)
+
+  const isAgentRole = role === 'agent'
 
   async function load() {
     setLoading(true)
     setError('')
     try {
-      setAgents(await listAgents())
+      setAgents(await listStaff())
     } catch {
-      setError('Erro ao carregar corretores.')
+      setError('Erro ao carregar equipe.')
     } finally {
       setLoading(false)
     }
@@ -65,6 +69,7 @@ export function AgentsPage() {
     setPassword('')
     setCreci('')
     setWhatsapp('')
+    setRole('agent')
     setIsActive(true)
     setModalMode('create')
   }
@@ -76,6 +81,7 @@ export function AgentsPage() {
     setPassword('')
     setCreci(agent.creci || '')
     setWhatsapp(agent.whatsapp || '')
+    setRole(agent.role === 'financial' ? 'financial' : 'agent')
     setIsActive(agent.is_active)
     setModalMode('edit')
   }
@@ -91,11 +97,12 @@ export function AgentsPage() {
     setSubmitting(true)
     setError('')
     try {
-      const payload: AgentPayload = {
+      const payload: StaffPayload = {
         name: name.trim(),
         email: email.trim(),
-        creci: creci.trim() || undefined,
-        whatsapp: whatsapp.replace(/\D/g, '') || undefined,
+        role,
+        creci: isAgentRole ? creci.trim() || undefined : undefined,
+        whatsapp: isAgentRole ? whatsapp.replace(/\D/g, '') || undefined : undefined,
         is_active: isActive,
       }
 
@@ -104,19 +111,23 @@ export function AgentsPage() {
           setError('Senha deve ter no mínimo 6 caracteres.')
           return
         }
-        await createAgent({ ...payload, password })
-        setToast('Corretor cadastrado')
+        if (isAgentRole && !payload.whatsapp) {
+          setError('Corretores precisam de WhatsApp cadastrado.')
+          return
+        }
+        await createStaff({ ...payload, password, role })
+        setToast('Usuário cadastrado')
       } else if (selected) {
-        await updateAgent(selected.id, {
+        await updateStaff(selected.id, {
           ...payload,
           ...(password ? { password } : {}),
         })
-        setToast('Corretor atualizado')
+        setToast('Usuário atualizado')
       }
       closeModal()
       await load()
     } catch (err) {
-      setError(err instanceof HttpError ? err.message : 'Erro ao salvar corretor.')
+      setError(err instanceof HttpError ? err.message : 'Erro ao salvar usuário.')
     } finally {
       setSubmitting(false)
     }
@@ -126,12 +137,12 @@ export function AgentsPage() {
     <div>
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="type-page-title font-semibold text-slate-900">Corretores</h1>
+          <h1 className="type-page-title font-semibold text-slate-900">Equipe</h1>
           <p className="type-page-lead text-slate-500">
-            Cadastre corretores com nome, CRECI e WhatsApp. Os dados são vinculados automaticamente aos imóveis.
+            Cadastre corretores (com CRECI e WhatsApp) ou usuários do financeiro (viabilidade de loteamentos).
           </p>
         </div>
-        <Button onClick={openCreate}>+ Novo corretor</Button>
+        <Button onClick={openCreate}>+ Novo usuário</Button>
       </div>
 
       {toast && (
@@ -150,7 +161,7 @@ export function AgentsPage() {
           </div>
         ) : agents.length === 0 ? (
           <div className="px-6 py-16 text-center text-slate-500">
-            Nenhum corretor cadastrado.
+            Nenhum usuário cadastrado.
           </div>
         ) : (
           <>
@@ -169,6 +180,9 @@ export function AgentsPage() {
                       <p className="font-semibold text-slate-900">{agent.name}</p>
                       <p className="truncate text-xs text-slate-500">{agent.email}</p>
                       <div className="mt-1.5 flex flex-wrap items-center gap-2">
+                        <span className="rounded-full bg-violet-50 px-2 py-0.5 text-[10px] font-semibold text-violet-700">
+                          {ROLE_LABELS[agent.role]}
+                        </span>
                         {agent.creci && (
                           <span className="text-xs text-slate-600">CRECI {agent.creci}</span>
                         )}
@@ -193,7 +207,8 @@ export function AgentsPage() {
             <table className="type-table w-full text-left">
               <thead>
                 <tr className="type-table-head border-b border-slate-100 bg-slate-50/80 uppercase text-slate-500">
-                  <th className="px-4 py-3 font-medium">Corretor</th>
+                  <th className="px-4 py-3 font-medium">Usuário</th>
+                  <th className="px-4 py-3 font-medium">Perfil</th>
                   <th className="px-4 py-3 font-medium">CRECI</th>
                   <th className="px-4 py-3 font-medium">WhatsApp</th>
                   <th className="px-4 py-3 font-medium">Status</th>
@@ -213,6 +228,11 @@ export function AgentsPage() {
                           <p className="text-xs text-slate-500">{agent.email}</p>
                         </div>
                       </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="rounded-full bg-violet-50 px-2.5 py-1 text-xs font-medium text-violet-700">
+                        {ROLE_LABELS[agent.role]}
+                      </span>
                     </td>
                     <td className="px-4 py-3 text-slate-600">{agent.creci || '—'}</td>
                     <td className="px-4 py-3 text-slate-600">{formatWhatsAppPhone(agent.whatsapp)}</td>
@@ -242,7 +262,7 @@ export function AgentsPage() {
       <Modal
         open={modalMode !== null}
         onClose={closeModal}
-        title={modalMode === 'create' ? 'Novo corretor' : 'Editar corretor'}
+        title={modalMode === 'create' ? 'Novo usuário' : 'Editar usuário'}
         wide
       >
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -251,7 +271,27 @@ export function AgentsPage() {
           )}
 
           <div className="rounded-lg bg-blue-50 px-3 py-2 text-xs text-blue-800">
-            Nome, CRECI e WhatsApp serão usados automaticamente em todos os imóveis cadastrados por este corretor.
+            {isAgentRole
+              ? 'Corretores usam CRECI e WhatsApp nos anúncios publicados no site.'
+              : 'Usuários financeiros acessam viabilidade de loteamentos (VGV, custos, VPL, TIR).'}
+          </div>
+
+          <div>
+            <p className="mb-2 text-sm font-medium text-slate-700">Perfil de acesso</p>
+            <div className="inline-flex w-full rounded-lg bg-slate-100 p-1 sm:w-auto">
+              {(['agent', 'financial'] as const).map((option) => (
+                <button
+                  key={option}
+                  type="button"
+                  onClick={() => setRole(option)}
+                  className={`flex-1 rounded-md px-4 py-2 text-sm font-medium sm:flex-none ${
+                    role === option ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-600'
+                  }`}
+                >
+                  {option === 'agent' ? 'Corretor' : 'Financeiro'}
+                </button>
+              ))}
+            </div>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
@@ -264,19 +304,24 @@ export function AgentsPage() {
               onChange={(e) => setPassword(e.target.value)}
               required={modalMode === 'create'}
             />
-            <Input label="CRECI" placeholder="Ex: 123456-F" value={creci} onChange={(e) => setCreci(e.target.value)} />
-            <Input
-              label="WhatsApp"
-              placeholder="5511999999999"
-              value={whatsapp}
-              onChange={(e) => setWhatsapp(e.target.value)}
-            />
+            {isAgentRole && (
+              <>
+                <Input label="CRECI" placeholder="Ex: 123456-F" value={creci} onChange={(e) => setCreci(e.target.value)} />
+                <Input
+                  label="WhatsApp"
+                  placeholder="5511999999999"
+                  value={whatsapp}
+                  onChange={(e) => setWhatsapp(e.target.value)}
+                  required={modalMode === 'create'}
+                />
+              </>
+            )}
           </div>
 
           {modalMode === 'edit' && (
             <label className="flex items-center gap-2 text-sm text-slate-700">
               <input type="checkbox" checked={isActive} onChange={(e) => setIsActive(e.target.checked)} />
-              Corretor ativo (pode acessar o painel)
+              Usuário ativo (pode acessar o painel)
             </label>
           )}
 

@@ -1,10 +1,12 @@
+export type UserRole = 'admin' | 'agent' | 'financial'
+
 export interface User {
   id: string
   email: string
   name: string
   creci: string | null
   whatsapp: string | null
-  role: 'admin' | 'agent'
+  role: UserRole
   is_active: boolean
 }
 
@@ -21,4 +23,14 @@ export interface AgentPayload {
   creci?: string
   whatsapp?: string
   is_active?: boolean
+}
+
+export interface StaffPayload extends AgentPayload {
+  role?: 'agent' | 'financial'
+}
+
+export const ROLE_LABELS: Record<UserRole, string> = {
+  admin: 'Administrador',
+  agent: 'Corretor',
+  financial: 'Financeiro',
 }

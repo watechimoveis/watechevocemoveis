@@ -69,23 +69,23 @@ export function AdminDashboard() {
         <h2 className="type-section-label mb-3 font-semibold uppercase text-slate-500">Ações rápidas</h2>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <ActionCard
-            to="/corretores?novo=1"
+            to="/equipe?novo=1"
             icon="👤"
-            title="Cadastrar corretor"
-            description="Nome, CRECI, WhatsApp e acesso ao painel"
+            title="Cadastrar usuário"
+            description="Corretor ou perfil financeiro"
             variant="primary"
           />
           <ActionCard
-            to="/imoveis?novo=1"
-            icon="🏞️"
-            title="Novo anúncio"
-            description="Publicar terreno ou lote em nome de um corretor"
+            to="/financeiro"
+            icon="📊"
+            title="Módulo financeiro"
+            description="Viabilidade de loteamentos"
           />
           <ActionCard
             to="/imoveis"
             icon="📋"
-            title="Ver todos os anúncios"
-            description="Listar, editar e moderar terrenos e lotes"
+            title="Ver anúncios"
+            description="Terrenos e lotes publicados"
           />
         </div>
       </section>
@@ -93,8 +93,9 @@ export function AdminDashboard() {
       <section className="rounded-2xl border border-slate-200 bg-white p-5">
         <h2 className="type-section-label font-semibold uppercase text-slate-500">Opções avançadas</h2>
         <ul className="mt-4 divide-y divide-slate-100">
-          <AdvancedLink to="/corretores" title="Gerenciar corretores" desc="Editar, desativar ou redefinir senha" />
-          <AdvancedLink to="/imoveis" title="Moderar anúncios" desc="Reatribuir corretor, editar ou remover imóveis" />
+          <AdvancedLink to="/equipe" title="Gerenciar equipe" desc="Corretores, financeiro, senhas e acesso" />
+          <AdvancedLink to="/financeiro" title="Viabilidade financeira" desc="Loteamentos, custos, projeção e indicadores" />
+          <AdvancedLink to="/imoveis" title="Moderar anúncios" desc="Editar ou remover terrenos e lotes" />
         </ul>
       </section>
     </div>
