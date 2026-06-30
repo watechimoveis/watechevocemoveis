@@ -12,6 +12,7 @@ from app.shared.database.base import Base
 class UserRole(str, enum.Enum):
     ADMIN = "admin"
     AGENT = "agent"
+    FINANCIAL = "financial"
 
 
 class User(Base):

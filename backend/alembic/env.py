@@ -11,6 +11,7 @@ from app.shared.database.base import Base
 # Import models so Alembic detects metadata
 from app.modules.properties import models  # noqa: F401
 from app.modules.users import models as users_models  # noqa: F401
+from app.modules.developments import models as developments_models  # noqa: F401
 
 config = context.config
 

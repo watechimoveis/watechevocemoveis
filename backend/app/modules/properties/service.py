@@ -130,7 +130,16 @@ class PropertyService:
             )
         return agent
 
+    def _ensure_can_access_properties(self, user: CurrentUser) -> None:
+        if user.is_financial:
+            raise AppError(
+                code="FORBIDDEN",
+                message="Acesso restrito — use o módulo financeiro",
+                status_code=403,
+            )
+
     def create(self, payload: PropertyCreate, user: CurrentUser) -> PropertyResponse:
+        self._ensure_can_access_properties(user)
         data = payload.model_dump(exclude_unset=True, exclude={"agent_user_id"})
         agent = self._resolve_agent_for_create(payload, user)
         if agent:
@@ -146,6 +155,8 @@ class PropertyService:
         user: CurrentUser | None,
         filters: PropertySearchFilters | None = None,
     ) -> PropertyListResponse:
+        if user:
+            self._ensure_can_access_properties(user)
         agent_filter = user.id if user and user.is_agent else None
         items, total = self.repository.list_paginated(
             page, limit, agent_user_id=agent_filter, filters=filters
@@ -167,6 +178,8 @@ class PropertyService:
         )
 
     def get_by_id(self, property_id: UUID, user: CurrentUser | None = None) -> PropertyResponse:
+        if user:
+            self._ensure_can_access_properties(user)
         property_ = self.repository.get_by_id(property_id)
         if not property_:
             raise NotFoundError("Imóvel não encontrado")
@@ -181,6 +194,7 @@ class PropertyService:
         return responses[0]
 
     def update(self, property_id: UUID, payload: PropertyUpdate, user: CurrentUser) -> PropertyResponse:
+        self._ensure_can_access_properties(user)
         property_ = self.repository.get_by_id(property_id)
         if not property_:
             raise NotFoundError("Imóvel não encontrado")
@@ -199,6 +213,7 @@ class PropertyService:
         return responses[0]
 
     def delete(self, property_id: UUID, user: CurrentUser) -> None:
+        self._ensure_can_access_properties(user)
         property_ = self.repository.get_by_id(property_id)
         if not property_:
             raise NotFoundError("Imóvel não encontrado")
@@ -207,6 +222,7 @@ class PropertyService:
         delete_property_images(property_id)
 
     def upload_images(self, property_id: UUID, files: list[UploadFile], user: CurrentUser) -> list[PropertyImageResponse]:
+        self._ensure_can_access_properties(user)
         property_ = self.repository.get_by_id(property_id)
         if not property_:
             raise NotFoundError("Imóvel não encontrado")
@@ -222,6 +238,7 @@ class PropertyService:
         return uploaded
 
     def delete_image(self, property_id: UUID, image_id: UUID, user: CurrentUser) -> None:
+        self._ensure_can_access_properties(user)
         property_ = self.repository.get_by_id(property_id)
         if not property_:
             raise NotFoundError("Imóvel não encontrado")
@@ -251,6 +268,7 @@ class PropertyService:
         return [self._to_response(item) for item in items]
 
     def get_analytics_overview(self, user: CurrentUser, days: int = 7):
+        self._ensure_can_access_properties(user)
         from app.modules.properties.schemas import (
             AnalyticsDayPoint,
             AnalyticsOverviewResponse,

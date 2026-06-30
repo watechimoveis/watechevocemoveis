@@ -25,6 +25,14 @@ class UserRepository:
         )
         return list(self.db.scalars(stmt).all())
 
+    def list_staff(self) -> list[User]:
+        stmt = (
+            select(User)
+            .where(User.role.in_((UserRole.AGENT.value, UserRole.FINANCIAL.value)))
+            .order_by(User.role.asc(), User.name.asc())
+        )
+        return list(self.db.scalars(stmt).all())
+
     def create(self, data: dict) -> User:
         user = User(**data)
         self.db.add(user)

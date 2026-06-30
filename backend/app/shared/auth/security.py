@@ -31,3 +31,11 @@ class CurrentUser:
     @property
     def is_agent(self) -> bool:
         return self.role == "agent"
+
+    @property
+    def is_financial(self) -> bool:
+        return self.role == "financial"
+
+    @property
+    def can_access_financial(self) -> bool:
+        return self.is_admin or self.is_financial

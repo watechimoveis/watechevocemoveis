@@ -64,6 +64,13 @@ Migration:
 docker compose exec api alembic upgrade head
 ```
 
+## Migrations
+
+- **Local/dev:** `alembic upgrade head` (Docker ou venv).
+- **Supabase (produção):** aplicar manualmente os `.sql` em `supabase/sql/` — ver **`supabase/sql/README.md`**.
+
+Toda migration nova exige um `.sql` espelho + atualização do `MANIFEST.md`.
+
 ## Desenvolvimento local
 
 ```bash

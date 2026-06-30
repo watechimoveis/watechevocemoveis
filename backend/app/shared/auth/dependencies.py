@@ -50,6 +50,16 @@ def require_admin(user: CurrentUser = Depends(get_current_user)) -> CurrentUser:
     return user
 
 
+def require_admin_or_financial(user: CurrentUser = Depends(get_current_user)) -> CurrentUser:
+    if not user.can_access_financial:
+        raise AppError(
+            code="FORBIDDEN",
+            message="Acesso restrito ao financeiro ou administrador",
+            status_code=403,
+        )
+    return user
+
+
 def get_optional_user(
     credentials: HTTPAuthorizationCredentials | None = Depends(security),
     db: Session = Depends(get_db),

@@ -10,6 +10,8 @@ from app.config import settings
 from app.modules.auth.router import router as auth_router
 from app.modules.properties.router import router as properties_router
 from app.modules.users.router import router as agents_router
+from app.modules.users.staff_router import router as staff_router
+from app.modules.developments.router import router as developments_router
 from app.shared.database.seed import seed_admin_user
 from app.shared.database.session import SessionLocal
 from app.shared.errors.handlers import register_exception_handlers
@@ -62,6 +64,8 @@ def create_app() -> FastAPI:
 
     app.include_router(auth_router, prefix=settings.api_prefix)
     app.include_router(agents_router, prefix=settings.api_prefix)
+    app.include_router(staff_router, prefix=settings.api_prefix)
+    app.include_router(developments_router, prefix=settings.api_prefix)
     app.include_router(properties_router, prefix=settings.api_prefix)
 
     @app.get("/health")
